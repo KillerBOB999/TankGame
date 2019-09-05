@@ -154,20 +154,19 @@ namespace TankGame
 		private void DrawPlayers()
 		{
 			//Proportional number of pixels that represent the pixel per game tile
-			int x = splitContainer1.Panel2.Width / WIDTH_IN_TILES;
-			int y = splitContainer1.Panel2.Height / HEIGHT_IN_TILES;
-
-			Player.xScale = 9 * x / 10;
-			Player.yScale = 9 * y / 10;
+			Player.xScale = splitContainer1.Panel2.Width / WIDTH_IN_TILES;
+			Player.yScale = splitContainer1.Panel2.Height / HEIGHT_IN_TILES;
 
 			red.body = new Bitmap(red.body, new Size(Player.xScale, Player.yScale));
+			red.body.RotateFlip(RotateFlipType.Rotate90FlipNone);
 			blue.body = new Bitmap(blue.body, new Size(Player.xScale, Player.yScale));
 			Bitmap bm = new Bitmap(bitmap.Width, bitmap.Height);
 
 			using (Graphics gr = Graphics.FromImage(bm))
 			{
 				gr.DrawImage(bitmap, new Point(0, 0));
-				gr.DrawImage(red.body, new Point(red.position.x * x, red.position.y * y));
+				gr.DrawImage(red.body, new Point(red.position.x * Player.xScale, red.position.y * Player.yScale));
+				gr.DrawImage(blue.body, new Point(blue.position.x * Player.xScale, blue.position.y * Player.yScale));
 			}
 			bitmap = bm;
 			splitContainer1.Panel2.BackgroundImage = bitmap;
@@ -194,23 +193,21 @@ namespace TankGame
 		/// </summary>
 		private void TileType(int typeSpecifier/*ref Bitmap map*/)
 		{
-			int x = splitContainer1.Panel2.Width / WIDTH_IN_TILES;
-			int y = splitContainer1.Panel2.Height / HEIGHT_IN_TILES;
 			switch (typeSpecifier)
 			{
 				case 0:         //Floor Tile
-					mapBlocks[xMapBlock, yMapBlock] = new MapBlock(false, true, false, false, false, xMapBlock, yMapBlock, Color.Black, x, y);
+					mapBlocks[xMapBlock, yMapBlock] = new MapBlock(false, true, false, false, false, xMapBlock, yMapBlock, Color.Black, Player.xScale, Player.yScale);
 					break;
 				case 1:         //Wall Tile
-					mapBlocks[xMapBlock, yMapBlock] = new MapBlock(false, false, true, false, false, xMapBlock, yMapBlock, Color.Gray, x, y);
+					mapBlocks[xMapBlock, yMapBlock] = new MapBlock(false, false, true, false, false, xMapBlock, yMapBlock, Color.Gray, Player.xScale, Player.yScale);
 					break;
 				case 8:         //Red Player Spawn
-					mapBlocks[xMapBlock, yMapBlock] = new MapBlock(false, true, false, true, false, xMapBlock, yMapBlock, Color.Red, x, y);
+					mapBlocks[xMapBlock, yMapBlock] = new MapBlock(false, true, false, true, false, xMapBlock, yMapBlock, Color.Red, Player.xScale, Player.yScale);
 					red.spawnPoint.x = xMapBlock;
 					red.spawnPoint.y = yMapBlock;
 					break;
 				case 9:         //Blue Player Spawn
-					mapBlocks[xMapBlock, yMapBlock] = new MapBlock(false, true, false, false, true, xMapBlock, yMapBlock, Color.Blue, x, y);
+					mapBlocks[xMapBlock, yMapBlock] = new MapBlock(false, true, false, false, true, xMapBlock, yMapBlock, Color.Blue, Player.xScale, Player.yScale);
 					blue.spawnPoint.x = xMapBlock;
 					blue.spawnPoint.y = yMapBlock;
 					break;
