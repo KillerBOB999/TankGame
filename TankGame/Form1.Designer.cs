@@ -56,6 +56,7 @@
 			this.splitContainer1.Size = new System.Drawing.Size(804, 450);
 			this.splitContainer1.SplitterDistance = 267;
 			this.splitContainer1.TabIndex = 0;
+			this.splitContainer1.TabStop = false;
 			// 
 			// button2
 			// 
@@ -63,6 +64,7 @@
 			this.button2.Name = "button2";
 			this.button2.Size = new System.Drawing.Size(120, 106);
 			this.button2.TabIndex = 1;
+			this.button2.TabStop = false;
 			this.button2.Text = "Initialize";
 			this.button2.UseVisualStyleBackColor = true;
 			this.button2.Click += new System.EventHandler(this.Button2_Click);
@@ -74,6 +76,7 @@
 			this.button3.Name = "button3";
 			this.button3.Size = new System.Drawing.Size(120, 109);
 			this.button3.TabIndex = 2;
+			this.button3.TabStop = false;
 			this.button3.Text = "Update Players";
 			this.button3.UseVisualStyleBackColor = true;
 			this.button3.Click += new System.EventHandler(this.Button3_Click);
@@ -84,6 +87,7 @@
 			this.button1.Name = "button1";
 			this.button1.Size = new System.Drawing.Size(121, 109);
 			this.button1.TabIndex = 0;
+			this.button1.TabStop = false;
 			this.button1.Text = "Update Background";
 			this.button1.UseVisualStyleBackColor = true;
 			this.button1.Click += new System.EventHandler(this.Button1_Click);

@@ -16,12 +16,19 @@ namespace TankGame
 		public Form1()
 		{
 			InitializeComponent();
+			Focus();
+		}
+
+		protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+		{
+			//TO DO: Handle key events
+			return true;
 		}
 
 		//Globals
 		string terrainMapN = File.ReadAllText("Resources/Maps/TerrainMaps/TerrainMap1.JSON"); //Read the file into a single string for easier manipulation
-		Player red = new Player("Resources/images/Red_TankBody.png", "Resources/images/Turret.png");
-		Player blue = new Player("Resources/images/Blue_TankBody.png", "Resources/images/Turret.png");
+		Player red = new Player("Resources/images/Red_TankBody.png", "Resources/images/Turret.png", 0, 0);
+		Player blue = new Player("Resources/images/Blue_TankBody.png", "Resources/images/Turret.png", 0, 0);
 		const int WIDTH_IN_TILES = 25;		//Number of tiles in the width of the world
 		const int HEIGHT_IN_TILES = 25;     //Number of tiles in the height of the world
 		int xMapBlock;
@@ -157,16 +164,16 @@ namespace TankGame
 			Player.xScale = splitContainer1.Panel2.Width / WIDTH_IN_TILES;
 			Player.yScale = splitContainer1.Panel2.Height / HEIGHT_IN_TILES;
 
-			red.body = new Bitmap(red.body, new Size(Player.xScale, Player.yScale));
-			red.body.RotateFlip(RotateFlipType.Rotate90FlipNone);
-			blue.body = new Bitmap(blue.body, new Size(Player.xScale, Player.yScale));
+			red.updatePlayer();
+			blue.updatePlayer();
+
 			Bitmap bm = new Bitmap(bitmap.Width, bitmap.Height);
 
 			using (Graphics gr = Graphics.FromImage(bm))
 			{
 				gr.DrawImage(bitmap, new Point(0, 0));
-				gr.DrawImage(red.body, new Point(red.position.x * Player.xScale, red.position.y * Player.yScale));
-				gr.DrawImage(blue.body, new Point(blue.position.x * Player.xScale, blue.position.y * Player.yScale));
+				gr.DrawImage(red.bodyOriented, new Point(red.position.x * Player.xScale, red.position.y * Player.yScale));
+				gr.DrawImage(blue.bodyOriented, new Point(blue.position.x * Player.xScale, blue.position.y * Player.yScale));
 			}
 			bitmap = bm;
 			splitContainer1.Panel2.BackgroundImage = bitmap;
@@ -245,8 +252,10 @@ namespace TankGame
 
 	public class Player
 	{
-		public Bitmap body;
-		public Bitmap turret;
+		public Bitmap bodyBase;
+		public Bitmap turretBase;
+		public Bitmap bodyOriented;
+		public Bitmap turretOriented;
 		public static int xScale = 1;
 		public static int yScale = 1;
 		public Position spawnPoint = new Position();
@@ -256,12 +265,53 @@ namespace TankGame
 		public Orientation turretOrientation = new Orientation();
 
 		//Constructor
-		public Player(string tankBody, string tankTurret)
+		public Player(string tankBody, string tankTurret, Orientation bodyOrientation, Orientation gunOrientation)
 		{
-			body = new Bitmap(Image.FromFile(tankBody));
-			turret = new Bitmap(Image.FromFile(tankTurret));
+			bodyBase = new Bitmap(Image.FromFile(tankBody));
+			turretBase = new Bitmap(Image.FromFile(tankTurret));
+			tankOrientation = bodyOrientation;
+			turretOrientation = gunOrientation;
+			bodyOriented = findOrientedImage(bodyBase, bodyOrientation);
+			turretOriented = findOrientedImage(turretBase, turretOrientation);
 		}
 
+		public Bitmap findOrientedImage(Bitmap baseImage, Orientation orientation)
+		{
+			switch (orientation)
+			{
+				case Orientation.North:
+					return baseImage;
+				case Orientation.East:
+					baseImage.RotateFlip(RotateFlipType.Rotate90FlipNone);
+					return baseImage;
+				case Orientation.South:
+					baseImage.RotateFlip(RotateFlipType.Rotate180FlipNone);
+					return baseImage;
+				case Orientation.West:
+					baseImage.RotateFlip(RotateFlipType.Rotate270FlipNone);
+					return baseImage;
+				default:
+					return baseImage;
+			}
+		}
+
+		public void updatePlayer()
+		{
+			position.x += velocity.x;
+			position.y += velocity.y;
+			bodyOriented = findOrientedImage(scaleBody(), tankOrientation);
+			turretOriented = findOrientedImage(scaleTurret(), turretOrientation);
+		}
+
+		public Bitmap scaleBody()
+		{
+			return new Bitmap(bodyBase, new Size(xScale, yScale));
+		}
+
+		public Bitmap scaleTurret()
+		{
+			return new Bitmap(turretBase, new Size(xScale, yScale));
+		}
 	}
 
 
