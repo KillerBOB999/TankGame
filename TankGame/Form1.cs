@@ -22,13 +22,23 @@ namespace TankGame
 		protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
 		{
 			//TO DO: Handle key events
+			if (red.isHuman == true)
+			{
+				red.keyController(keyData);
+			}
+			else if (blue.isHuman == true)
+			{
+				blue.keyController(keyData);
+			}
 			return true;
 		}
 
 		//Globals
+		const bool isRedHumanPlaying = true;
+		const bool isBlueHumanPlaying = false;
 		string terrainMapN = File.ReadAllText("Resources/Maps/TerrainMaps/TerrainMap1.JSON"); //Read the file into a single string for easier manipulation
-		Player red = new Player("Resources/images/Red_TankBody.png", "Resources/images/Turret.png", 0, 0);
-		Player blue = new Player("Resources/images/Blue_TankBody.png", "Resources/images/Turret.png", 0, 0);
+		Player red = new Player("Resources/images/Red_TankBody.png", "Resources/images/Turret.png", 0, 0, isRedHumanPlaying);
+		Player blue = new Player("Resources/images/Blue_TankBody.png", "Resources/images/Turret.png", 0, 0, isBlueHumanPlaying);
 		const int WIDTH_IN_TILES = 25;		//Number of tiles in the width of the world
 		const int HEIGHT_IN_TILES = 25;     //Number of tiles in the height of the world
 		int xMapBlock;
@@ -173,7 +183,9 @@ namespace TankGame
 			{
 				gr.DrawImage(bitmap, new Point(0, 0));
 				gr.DrawImage(red.bodyOriented, new Point(red.position.x * Player.xScale, red.position.y * Player.yScale));
+				gr.DrawImage(red.turretOriented, new Point(red.position.x * Player.xScale, red.position.y * Player.yScale));
 				gr.DrawImage(blue.bodyOriented, new Point(blue.position.x * Player.xScale, blue.position.y * Player.yScale));
+				gr.DrawImage(blue.turretOriented, new Point(blue.position.x * Player.xScale, blue.position.y * Player.yScale));
 			}
 			bitmap = bm;
 			splitContainer1.Panel2.BackgroundImage = bitmap;
@@ -247,121 +259,6 @@ namespace TankGame
 		private void Button3_Click(object sender, EventArgs e)
 		{
 			DrawPlayers();
-		}
-	}
-
-	public class Player
-	{
-		public Bitmap bodyBase;
-		public Bitmap turretBase;
-		public Bitmap bodyOriented;
-		public Bitmap turretOriented;
-		public static int xScale = 1;
-		public static int yScale = 1;
-		public Position spawnPoint = new Position();
-		public Position position = new Position();
-		public Velocity velocity = new Velocity();
-		public Orientation tankOrientation = new Orientation();
-		public Orientation turretOrientation = new Orientation();
-
-		//Constructor
-		public Player(string tankBody, string tankTurret, Orientation bodyOrientation, Orientation gunOrientation)
-		{
-			bodyBase = new Bitmap(Image.FromFile(tankBody));
-			turretBase = new Bitmap(Image.FromFile(tankTurret));
-			tankOrientation = bodyOrientation;
-			turretOrientation = gunOrientation;
-			bodyOriented = findOrientedImage(bodyBase, bodyOrientation);
-			turretOriented = findOrientedImage(turretBase, turretOrientation);
-		}
-
-		public Bitmap findOrientedImage(Bitmap baseImage, Orientation orientation)
-		{
-			switch (orientation)
-			{
-				case Orientation.North:
-					return baseImage;
-				case Orientation.East:
-					baseImage.RotateFlip(RotateFlipType.Rotate90FlipNone);
-					return baseImage;
-				case Orientation.South:
-					baseImage.RotateFlip(RotateFlipType.Rotate180FlipNone);
-					return baseImage;
-				case Orientation.West:
-					baseImage.RotateFlip(RotateFlipType.Rotate270FlipNone);
-					return baseImage;
-				default:
-					return baseImage;
-			}
-		}
-
-		public void updatePlayer()
-		{
-			position.x += velocity.x;
-			position.y += velocity.y;
-			bodyOriented = findOrientedImage(scaleBody(), tankOrientation);
-			turretOriented = findOrientedImage(scaleTurret(), turretOrientation);
-		}
-
-		public Bitmap scaleBody()
-		{
-			return new Bitmap(bodyBase, new Size(xScale, yScale));
-		}
-
-		public Bitmap scaleTurret()
-		{
-			return new Bitmap(turretBase, new Size(xScale, yScale));
-		}
-	}
-
-
-	//Helper classes
-	public class Position
-	{
-		public int x = 0;
-		public int y = 0;
-	}
-
-	public class Velocity
-	{
-		public int x = 0;
-		public int y = 0;
-	}
-
-	public enum Orientation
-	{
-		North, East, South, West
-	}
-
-	public enum Color
-	{
-		Black, Gray, Red, Blue
-	}
-	public class MapBlock
-	{
-		public bool isOccupied = false;
-		public bool isFloor = false;
-		public bool isWall = false;
-		public bool isRedSpawn = false;
-		public bool isBlueSpawn = false;
-		public Position position = new Position();          //In game tiles
-		public static int xRatio;
-		public static int yRatio;
-
-		public Color color;
-
-		public MapBlock(bool isOcc, bool isFlo, bool isWal, bool isRed, bool isBlu, int xPos, int yPos, Color col, int xRat, int yRat)
-		{
-			isOccupied = isOcc;
-			isFloor = isFlo;
-			isWall = isWal;
-			isRedSpawn = isRed;
-			isBlueSpawn = isBlu;
-			position.x = xPos;
-			position.y = yPos;
-			color = col;
-			xRatio = xRat;
-			yRatio = yRat;
 		}
 	}
 }
