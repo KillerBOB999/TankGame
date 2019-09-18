@@ -65,7 +65,7 @@
 			this.button2.Size = new System.Drawing.Size(120, 106);
 			this.button2.TabIndex = 1;
 			this.button2.TabStop = false;
-			this.button2.Text = "Initialize";
+			this.button2.Text = "GameLoop";
 			this.button2.UseVisualStyleBackColor = true;
 			this.button2.Click += new System.EventHandler(this.Button2_Click);
 			// 

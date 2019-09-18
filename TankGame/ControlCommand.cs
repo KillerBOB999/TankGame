@@ -1,4 +1,4 @@
 ﻿public enum ControlCommand
 {
-	NONE, Up, Right, Down, Left
+	NONE, Up, Right, Down, Left, Space
 }

@@ -17,11 +17,11 @@ namespace TankGame
 		{
 			InitializeComponent();
 			Focus();
+			InitializeData();
 		}
 
 		protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
 		{
-			//TO DO: Handle key events
 			if (red.isHuman == true)
 			{
 				red.keyController(keyData);
@@ -30,6 +30,7 @@ namespace TankGame
 			{
 				blue.keyController(keyData);
 			}
+			GameLoop();
 			return true;
 		}
 
@@ -170,13 +171,6 @@ namespace TankGame
 
 		private void DrawPlayers()
 		{
-			//Proportional number of pixels that represent the pixel per game tile
-			Player.xScale = splitContainer1.Panel2.Width / WIDTH_IN_TILES;
-			Player.yScale = splitContainer1.Panel2.Height / HEIGHT_IN_TILES;
-
-			red.updatePlayer();
-			blue.updatePlayer();
-
 			Bitmap bm = new Bitmap(bitmap.Width, bitmap.Height);
 
 			using (Graphics gr = Graphics.FromImage(bm))
@@ -253,11 +247,22 @@ namespace TankGame
 
 		private void Button2_Click(object sender, EventArgs e)
 		{
-			InitializeData();
+			//backgroundWorker1.RunWorkerAsync();
 		}
 
 		private void Button3_Click(object sender, EventArgs e)
 		{
+			DrawPlayers();
+		}
+
+		public void GameLoop()
+		{
+			//Proportional number of pixels that represent the pixel per game tile
+			Player.xScale = splitContainer1.Panel2.Width / WIDTH_IN_TILES;
+			Player.yScale = splitContainer1.Panel2.Height / HEIGHT_IN_TILES;
+			red.updatePlayer(mapBlocks);
+			blue.updatePlayer(mapBlocks);
+			DrawBackground();
 			DrawPlayers();
 		}
 	}

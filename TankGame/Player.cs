@@ -22,6 +22,7 @@ namespace TankGame
 		public Velocity velocity = new Velocity();
 		public Orientation tankOrientation = new Orientation();
 		public Orientation turretOrientation = new Orientation();
+		public Missile[] missiles = { new Missile(), new Missile() };
 
 		//Constructor
 		public Player(string tankBody, string tankTurret, Orientation bodyOrientation, Orientation gunOrientation, bool isHum)
@@ -83,6 +84,9 @@ namespace TankGame
 				case Keys.A:
 					playerController(ControlCommand.NONE, ControlCommand.Left);
 					return;
+				case Keys.Space:
+					playerController(ControlCommand.NONE, ControlCommand.Space);
+					return;
 			}
 		}
 
@@ -138,15 +142,32 @@ namespace TankGame
 					velocity.y = 0;
 					turretOrientation = Orientation.West;
 					return;
+				// TODO: FINISH MISSILE IMPLEMENTATION
+				case ControlCommand.Space:
+					if (missiles[0].isActive)
+					{
+						missiles[1].isActive = true;
+					}
+					else
+					{
+						missiles[0].isActive = true;
+					}
+					return;
 			}
 
 			return;
 		}
 
-		public void updatePlayer()
+		public void updatePlayer(MapBlock[,] map)
 		{
-			position.x += velocity.x;
-			position.y += velocity.y;
+			Position newPosition = new Position(position.x + velocity.x, position.y + velocity.y);
+
+			if(map[newPosition.x, newPosition.y].isFloor)
+			{
+				position.x = newPosition.x;
+				position.y = newPosition.y;
+			}
+
 			bodyOriented = findOrientedImage(scaleBody(), tankOrientation);
 			turretOriented = findOrientedImage(scaleTurret(), turretOrientation);
 		}

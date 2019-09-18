@@ -10,5 +10,17 @@ namespace TankGame
 	{
 		public int x = 0;
 		public int y = 0;
+
+		public Position()
+		{
+			x = 0;
+			y = 0;
+		}
+
+		public Position(int X, int Y)
+		{
+			x = X;
+			y = Y;
+		}
 	}
 }
