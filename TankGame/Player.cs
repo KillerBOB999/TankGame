@@ -11,10 +11,13 @@ namespace TankGame
 	public class Player
 	{
 		public bool isHuman;
+		public bool isAlive = true;
 		public Bitmap bodyBase;
 		public Bitmap turretBase;
 		public Bitmap bodyOriented;
 		public Bitmap turretOriented;
+		public Bitmap bodyScaled;
+		public Bitmap turretScaled;
 		public static int xScale = 1;
 		public static int yScale = 1;
 		public Position spawnPoint = new Position();
@@ -142,15 +145,14 @@ namespace TankGame
 					velocity.y = 0;
 					turretOrientation = Orientation.West;
 					return;
-				// TODO: FINISH MISSILE IMPLEMENTATION
 				case ControlCommand.Space:
-					if (missiles[0].isActive)
+					if (missiles[0].isActive && !missiles[1].isActive)
 					{
-						missiles[1].isActive = true;
+						missiles[1].fireMissile(turretOrientation, position);
 					}
-					else
+					else if(!missiles[0].isActive)
 					{
-						missiles[0].isActive = true;
+						missiles[0].fireMissile(turretOrientation, position);
 					}
 					return;
 			}
@@ -162,24 +164,41 @@ namespace TankGame
 		{
 			Position newPosition = new Position(position.x + velocity.x, position.y + velocity.y);
 
-			if(map[newPosition.x, newPosition.y].isFloor)
+			if(map[newPosition.x, newPosition.y].isFloor && !map[newPosition.x, newPosition.y].isOccupied)
 			{
+				map[position.x, position.y].isOccupied = false;
 				position.x = newPosition.x;
 				position.y = newPosition.y;
+				map[position.x, position.y].isOccupied = true;
 			}
 
 			bodyOriented = findOrientedImage(scaleBody(), tankOrientation);
 			turretOriented = findOrientedImage(scaleTurret(), turretOrientation);
+
+			velocity.x = 0;
+			velocity.y = 0;
+
+			newPosition = null;
 		}
 
 		public Bitmap scaleBody()
 		{
-			return new Bitmap(bodyBase, new Size(xScale, yScale));
+			if(bodyScaled != null)
+			{
+				bodyScaled.Dispose();
+			}
+			bodyScaled = new Bitmap(bodyBase, new Size(xScale, yScale));
+			return bodyScaled;
 		}
 
 		public Bitmap scaleTurret()
 		{
-			return new Bitmap(turretBase, new Size(xScale, yScale));
+			if (turretScaled != null)
+			{
+				turretScaled.Dispose();
+			}
+			turretScaled = new Bitmap(turretBase, new Size(xScale, yScale));
+			return turretScaled;
 		}
 	}
 }

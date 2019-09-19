@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
+using System.Diagnostics;
 
 namespace TankGame
 {
@@ -18,6 +19,13 @@ namespace TankGame
 			InitializeComponent();
 			Focus();
 			InitializeData();
+			GameLoop();
+			Application.Idle += HandleApplicationIdle;
+		}
+
+		void HandleApplicationIdle(object sender, EventArgs e)
+		{
+			GameLoop();
 		}
 
 		protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
@@ -37,6 +45,7 @@ namespace TankGame
 		//Globals
 		const bool isRedHumanPlaying = true;
 		const bool isBlueHumanPlaying = false;
+		float rating = 1;
 		string terrainMapN = File.ReadAllText("Resources/Maps/TerrainMaps/TerrainMap1.JSON"); //Read the file into a single string for easier manipulation
 		Player red = new Player("Resources/images/Red_TankBody.png", "Resources/images/Turret.png", 0, 0, isRedHumanPlaying);
 		Player blue = new Player("Resources/images/Blue_TankBody.png", "Resources/images/Turret.png", 0, 0, isBlueHumanPlaying);
@@ -47,6 +56,10 @@ namespace TankGame
 		MapBlock[,] mapBlocks = new MapBlock[WIDTH_IN_TILES, HEIGHT_IN_TILES];
 		Position offset = new Position();   //Position offset for use when drawing the bitmap
 		Bitmap bitmap;
+
+		Timer timer1 = new Timer();
+		TimeSpan elapsed;
+		DateTime startTime = DateTime.Now;
 
 		private void InitializeData()
 		{
@@ -85,7 +98,12 @@ namespace TankGame
 			int y = splitContainer1.Panel2.Height / HEIGHT_IN_TILES;
 
 			//Bitmap to be used
-			bitmap = new Bitmap(splitContainer1.Panel2.Width, splitContainer1.Panel2.Height);// splitContainer1.Panel2.Width, splitContainer1.Panel2.Height
+			if(bitmap != null)
+			{
+				bitmap.Dispose();
+			}
+			bitmap = new Bitmap(splitContainer1.Panel2.Width, splitContainer1.Panel2.Height);
+
 			xMapBlock = 0;
 			yMapBlock = 0;
 
@@ -181,8 +199,44 @@ namespace TankGame
 				gr.DrawImage(blue.bodyOriented, new Point(blue.position.x * Player.xScale, blue.position.y * Player.yScale));
 				gr.DrawImage(blue.turretOriented, new Point(blue.position.x * Player.xScale, blue.position.y * Player.yScale));
 			}
+			bitmap.Dispose();
 			bitmap = bm;
-			splitContainer1.Panel2.BackgroundImage = bitmap;
+		}
+
+		private void DrawMissiles()
+		{
+			Bitmap bm = new Bitmap(bitmap.Width, bitmap.Height);
+
+			using (Graphics gr = Graphics.FromImage(bm))
+			{
+				gr.DrawImage(bitmap, new Point(0, 0));
+				for(int i = 0; i < red.missiles.Length; ++i)
+				{
+					if (red.missiles[i].isActive)
+					{
+						gr.DrawImage(red.missiles[i].missileOriented, new Point(red.missiles[i].position.x * Missile.xScale, red.missiles[i].position.y * Missile.yScale));
+					}
+					else if (red.missiles[i].isContact)
+					{
+						gr.DrawImage(red.missiles[i].scaleExplosion(), new Point(red.missiles[i].position.x * Missile.xScale, red.missiles[i].position.y * Missile.yScale));
+						red.missiles[i].isContact = false;
+					}
+				}
+				for (int i = 0; i < blue.missiles.Length; ++i)
+				{
+					if (blue.missiles[i].isActive)
+					{
+						gr.DrawImage(blue.missiles[i].missileOriented, new Point(blue.missiles[i].position.x * Missile.xScale, blue.missiles[i].position.y * Missile.yScale));
+					}
+					else if (blue.missiles[i].isContact)
+					{
+						gr.DrawImage(blue.missiles[i].scaleExplosion(), new Point(blue.missiles[i].position.x * Missile.xScale, blue.missiles[i].position.y * Missile.yScale));
+						blue.missiles[i].isContact = false;
+					}
+				}
+			}
+			bitmap.Dispose();
+			bitmap = bm;
 		}
 
 		/// <summary>
@@ -240,30 +294,33 @@ namespace TankGame
 			}
 		}
 
-		private void Button1_Click(object sender, EventArgs e)
+		private float CalcRating()
 		{
-			DrawBackground();
+			return 0;
 		}
 
-		private void Button2_Click(object sender, EventArgs e)
-		{
-			//backgroundWorker1.RunWorkerAsync();
-		}
-
-		private void Button3_Click(object sender, EventArgs e)
-		{
-			DrawPlayers();
-		}
 
 		public void GameLoop()
 		{
 			//Proportional number of pixels that represent the pixel per game tile
 			Player.xScale = splitContainer1.Panel2.Width / WIDTH_IN_TILES;
 			Player.yScale = splitContainer1.Panel2.Height / HEIGHT_IN_TILES;
+			Missile.xScale = Player.xScale;
+			Missile.yScale = Player.yScale;
 			red.updatePlayer(mapBlocks);
 			blue.updatePlayer(mapBlocks);
+			for(int i = 0; i < red.missiles.Length; ++i)
+			{
+				red.missiles[i].updateMissile(mapBlocks);
+			}
+			for (int i = 0; i < red.missiles.Length; ++i)
+			{
+				blue.missiles[i].updateMissile(mapBlocks);
+			}
 			DrawBackground();
 			DrawPlayers();
+			DrawMissiles();
+			splitContainer1.Panel2.BackgroundImage = bitmap;
 		}
 	}
 }
