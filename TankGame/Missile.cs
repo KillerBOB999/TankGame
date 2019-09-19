@@ -7,6 +7,13 @@ using System.Drawing;
 
 namespace TankGame
 {
+	/// <summary>
+	/// Developer:		Anthony Harris
+	/// Class Name:		Missile
+	/// Description:	Represents the missiles shot by the tanks
+	///	Last Modified:	19 September 2019
+	///	Modification:	Added comments, optimized memory usage, added explosion mechanics
+	/// </summary>
 	public class Missile
 	{
 		public static Bitmap missileBase = new Bitmap(Image.FromFile("Resources/images/BaseRocket.png"));

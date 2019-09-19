@@ -103,6 +103,7 @@
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(804, 450);
 			this.Controls.Add(this.splitContainer1);
+			this.DoubleBuffered = true;
 			this.Name = "Form1";
 			this.Text = "Tank Game";
 			this.splitContainer1.Panel1.ResumeLayout(false);

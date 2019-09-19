@@ -23,11 +23,35 @@ namespace TankGame
 			Application.Idle += HandleApplicationIdle;
 		}
 
+		/// <summary>
+		/// Developer:		Anthony Harris
+		/// Handler Name:	HandleApplicationIdle
+		/// Parameters:		Included but not used
+		/// Returns:		None
+		/// Description:	When the Application.Idle event is triggered, this
+		///					handler is called. This acts as a simple Game Loop timer
+		///	Last Modified:	19 September 2019
+		///	Modification:	Initialized handler and added comments
+		/// </summary>
 		void HandleApplicationIdle(object sender, EventArgs e)
 		{
 			GameLoop();
 		}
 
+		/// <summary>
+		/// Developer:		Anthony Harris
+		/// Function Name:	ProcessCmdKey
+		/// Parameters:		ref Message msg
+		///						Use: none
+		///					Keys keyData
+		///						Use: Represents the key pressed that triggered the event.
+		///							Is sent to the Player objects to be handled.
+		/// Returns:		True
+		/// Description:	Takes a key stroke as an input, determines which player is human,
+		///					and passes the key to said player.
+		///	Last Modified:	19 September 2019
+		///	Modification:	Added comments
+		/// </summary>
 		protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
 		{
 			if (red.isHuman == true)
@@ -42,25 +66,40 @@ namespace TankGame
 			return true;
 		}
 
-		//Globals
+		//START GLOBALS----------------------------------------------------------------------------------
+
+		//Who's playing?
 		const bool isRedHumanPlaying = true;
 		const bool isBlueHumanPlaying = false;
-		float rating = 1;
-		string terrainMapN = File.ReadAllText("Resources/Maps/TerrainMaps/TerrainMap1.JSON"); //Read the file into a single string for easier manipulation
-		Player red = new Player("Resources/images/Red_TankBody.png", "Resources/images/Turret.png", 0, 0, isRedHumanPlaying);
-		Player blue = new Player("Resources/images/Blue_TankBody.png", "Resources/images/Turret.png", 0, 0, isBlueHumanPlaying);
+
+		//Pull in external resources and initialize core entity objects
+		string terrainMapN = File.ReadAllText("Resources/Maps/TerrainMaps/TerrainMap1.JSON");
+		Player red = new Player("Resources/images/Red_TankBody.png", "Resources/images/Turret.png", 
+								0, 0, isRedHumanPlaying);
+		Player blue = new Player("Resources/images/Blue_TankBody.png", "Resources/images/Turret.png", 
+								0, 0, isBlueHumanPlaying);
+
+		//Define useful variables
 		const int WIDTH_IN_TILES = 25;		//Number of tiles in the width of the world
 		const int HEIGHT_IN_TILES = 25;     //Number of tiles in the height of the world
-		int xMapBlock;
-		int yMapBlock;
-		MapBlock[,] mapBlocks = new MapBlock[WIDTH_IN_TILES, HEIGHT_IN_TILES];
-		Position offset = new Position();   //Position offset for use when drawing the bitmap
-		Bitmap bitmap;
+		int xMapBlock;						//Used as iterator in mapBlocks[]
+		int yMapBlock;						//Used as iterator in mapBlocks[]
+		MapBlock[,] mapBlocks = new MapBlock[WIDTH_IN_TILES, HEIGHT_IN_TILES];//The map in gametiles
+		Position offset = new Position();   //Position offset in pixels for use when drawing the bitmap
+		Bitmap bitmap;						//The map in pixels
 
-		Timer timer1 = new Timer();
-		TimeSpan elapsed;
-		DateTime startTime = DateTime.Now;
+		//END GLOBALS------------------------------------------------------------------------------------
 
+		/// <summary>
+		/// Developer:		Anthony Harris
+		/// Function Name:	InitializeData()
+		/// Parameters:		None
+		/// Returns:		None
+		/// Description:	Iterates through the JSON map file and defines the starting
+		///					points for each entity.
+		///	Last Modified:	19 September 2019
+		///	Modification:	Added comments
+		/// </summary>
 		private void InitializeData()
 		{
 			xMapBlock = 0;
@@ -85,13 +124,16 @@ namespace TankGame
 
 		/// <summary>
 		/// Developer:		Anthony Harris
-		/// Function Name:	DrawBackGround
+		/// Function Name:	AddBackGround
 		/// Parameters:		None
 		/// Returns:		None
-		/// Description:	Intereprets JSON file and translates data into a bitmap for the background,
-		///					then draws this bitmap to the background.
+		/// Description:	Determines the definition of each pixel in the bitmap
+		///					based on the values found in the mapBlocks array of
+		///					MapBlock objects and adds them to the world bitmap
+		///	Last Modified:	19 September 2019
+		///	Modification:	Added comments and optimized memory usage
 		/// </summary>
-		private void DrawBackground()
+		private void AddBackground()
 		{
 			//Proportional number of pixels that represent the pixel per game tile
 			int x = splitContainer1.Panel2.Width / WIDTH_IN_TILES;
@@ -183,12 +225,20 @@ namespace TankGame
 				offset.x += x;
 				++xMapBlock;
 			}
-			//Draw the newly created bitmap to the panel
-			splitContainer1.Panel2.BackgroundImage = bitmap;
 		}
 
-		private void DrawPlayers()
+		/// <summary>
+		/// Developer:		Anthony Harris
+		/// Function Name:	AddPlayers
+		/// Parameters:		None
+		/// Returns:		None
+		/// Description:	Adds the player images to the existing bitmap
+		/// Last Modified:	19 September 2019
+		/// Modification:	Added comments and resolved memory issues
+		/// </summary>
+		private void AddPlayers()
 		{
+			//Temporary bitmap to be used for manipulation
 			Bitmap bm = new Bitmap(bitmap.Width, bitmap.Height);
 
 			using (Graphics gr = Graphics.FromImage(bm))
@@ -199,12 +249,26 @@ namespace TankGame
 				gr.DrawImage(blue.bodyOriented, new Point(blue.position.x * Player.xScale, blue.position.y * Player.yScale));
 				gr.DrawImage(blue.turretOriented, new Point(blue.position.x * Player.xScale, blue.position.y * Player.yScale));
 			}
+
+			//Remove previous map definition
 			bitmap.Dispose();
+
+			//Assign new map definition
 			bitmap = bm;
 		}
 
-		private void DrawMissiles()
+		/// <summary>
+		/// Developer:		Anthony Harris
+		/// Function Name:	AddMissiles
+		/// Parameters:		None	
+		/// Returns:		None
+		/// Description:	Adds the missile images to the existing bitmap.
+		/// Last Modified:	19 September 2019
+		/// Modification:	Creation and implementation of function/comments
+		/// </summary>
+		private void AddMissiles()
 		{
+			//Temporary bitmap to be used for manipulation
 			Bitmap bm = new Bitmap(bitmap.Width, bitmap.Height);
 
 			using (Graphics gr = Graphics.FromImage(bm))
@@ -235,7 +299,11 @@ namespace TankGame
 					}
 				}
 			}
+
+			//Remove previous map definition
 			bitmap.Dispose();
+
+			//Assign new map definition
 			bitmap = bm;
 		}
 
@@ -245,20 +313,12 @@ namespace TankGame
 		/// Parameters:		int typeSpecifier
 		///						Use:	Integer value representative of the type of game tile being added
 		///								to the bitmap. Ex: wall, floor.
-		///					ref Bitmap map
-		///						Use:	Reference to the preceding bitmap that will be drawn to the
-		///								background. Will be altered in accordance to the typeSpecifier.
-		///					int offset.x
-		///						Use:	Integer value representing the offset in the x-direction where the
-		///								unit of measurement is in pixels.
-		///					int offset.y
-		///						Use:	Integer value representing the offset in the y-direction where the
-		///								unit of measurement is in pixels.
 		/// Returns:		None
-		/// Description:	Manipulates the bitmap representation of the game world and defines the game
-		///					tiles.
+		/// Description:	Defines the game tiles within the mapBlocks global array.
+		/// Last Modified:	19 September 2019
+		/// Modification:	Adjusted comments.
 		/// </summary>
-		private void TileType(int typeSpecifier/*ref Bitmap map*/)
+		private void TileType(int typeSpecifier)
 		{
 			switch (typeSpecifier)
 			{
@@ -294,19 +354,27 @@ namespace TankGame
 			}
 		}
 
-		private float CalcRating()
-		{
-			return 0;
-		}
-
-
+		/// <summary>
+		/// Developer:		Anthony Harris
+		/// Function Name:	GameLoop
+		/// Parameters:		None
+		/// Returns:		None
+		/// Description:	The typical game loop found in games. While not defined
+		///					as "Render()" and "Update()", the steps found within 
+		///					serve the same purpose.
+		/// Last Modified:	19 September 2019
+		/// Modification:	Added comments.
+		/// </summary>
 		public void GameLoop()
 		{
-			//Proportional number of pixels that represent the pixel per game tile
+			//Determine and assign the Pixel:GameTile ratio and assign it to
+			//the static Player and Missile class variables xScale and yScale.
 			Player.xScale = splitContainer1.Panel2.Width / WIDTH_IN_TILES;
 			Player.yScale = splitContainer1.Panel2.Height / HEIGHT_IN_TILES;
 			Missile.xScale = Player.xScale;
 			Missile.yScale = Player.yScale;
+
+			//Equivalent of an Update()
 			red.updatePlayer(mapBlocks);
 			blue.updatePlayer(mapBlocks);
 			for(int i = 0; i < red.missiles.Length; ++i)
@@ -317,9 +385,11 @@ namespace TankGame
 			{
 				blue.missiles[i].updateMissile(mapBlocks);
 			}
-			DrawBackground();
-			DrawPlayers();
-			DrawMissiles();
+
+			//Equivalent of a Render()
+			AddBackground();
+			AddPlayers();
+			AddMissiles();
 			splitContainer1.Panel2.BackgroundImage = bitmap;
 		}
 	}
