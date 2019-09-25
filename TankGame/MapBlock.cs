@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 
 namespace TankGame
 {
@@ -16,6 +18,7 @@ namespace TankGame
 		public Position position = new Position();          //In game tiles
 		public static int xRatio;
 		public static int yRatio;
+		public static int numOfTraits = 5;
 
 		public Color color;
 

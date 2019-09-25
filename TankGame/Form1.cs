@@ -62,18 +62,21 @@ namespace TankGame
 			{
 				blue.keyController(keyData);
 			}
-			GameLoop();
 			return true;
 		}
 
 		//START GLOBALS----------------------------------------------------------------------------------
+
+		DateTime startTime = DateTime.Now;
+		DateTime currentTime = DateTime.Now;
+		TimeSpan elapsed = new TimeSpan();
 
 		//Who's playing?
 		const bool isRedHumanPlaying = true;
 		const bool isBlueHumanPlaying = false;
 
 		//Pull in external resources and initialize core entity objects
-		string terrainMapN = File.ReadAllText("Resources/Maps/TerrainMaps/TerrainMap1.JSON");
+		string terrainMapN = File.ReadAllText("Resources/Maps/TerrainMaps/TerrainMap2.JSON");
 		Player red = new Player("Resources/images/Red_TankBody.png", "Resources/images/Turret.png", 
 								0, 0, isRedHumanPlaying);
 		Player blue = new Player("Resources/images/Blue_TankBody.png", "Resources/images/Turret.png", 
@@ -81,12 +84,15 @@ namespace TankGame
 
 		//Define useful variables
 		const int WIDTH_IN_TILES = 25;		//Number of tiles in the width of the world
-		const int HEIGHT_IN_TILES = 25;     //Number of tiles in the height of the world
+		const int HEIGHT_IN_TILES = 25;		//Number of tiles in the height of the world
 		int xMapBlock;						//Used as iterator in mapBlocks[]
 		int yMapBlock;						//Used as iterator in mapBlocks[]
 		MapBlock[,] mapBlocks = new MapBlock[WIDTH_IN_TILES, HEIGHT_IN_TILES];//The map in gametiles
 		Position offset = new Position();   //Position offset in pixels for use when drawing the bitmap
-		Bitmap bitmap;						//The map in pixels
+		Bitmap bitmap;                      //The map in pixels
+		Bitmap bufferMap;
+		bool[] mapState = new bool[WIDTH_IN_TILES * HEIGHT_IN_TILES];
+		int mapStateIterator = 0;
 
 		//END GLOBALS------------------------------------------------------------------------------------
 
@@ -114,6 +120,7 @@ namespace TankGame
 					//Call the function to define the type of tile
 					TileType(pass);
 				}
+				++mapStateIterator;
 			}
 			red.position.x = red.spawnPoint.x;
 			red.position.y = red.spawnPoint.y;
@@ -354,6 +361,40 @@ namespace TankGame
 			}
 		}
 
+		private void Update()
+		{
+			currentTime = DateTime.Now;
+			elapsed = currentTime - startTime;
+
+			//Determine and assign the Pixel:GameTile ratio and assign it to
+			//the static Player and Missile class variables xScale and yScale.
+			Player.xScale = splitContainer1.Panel2.Width / WIDTH_IN_TILES;
+			Player.yScale = splitContainer1.Panel2.Height / HEIGHT_IN_TILES;
+			Missile.xScale = Player.xScale;
+			Missile.yScale = Player.yScale;
+
+			//Update players and missiles
+			red.updatePlayer(mapBlocks);
+			blue.updatePlayer(mapBlocks);
+			for (int i = 0; i < red.missiles.Length; ++i)
+			{
+				red.missiles[i].updateMissile(mapBlocks);
+			}
+			for (int i = 0; i < red.missiles.Length; ++i)
+			{
+				blue.missiles[i].updateMissile(mapBlocks);
+			}
+		}
+
+		private void Render()
+		{
+			AddBackground();
+			AddPlayers();
+			AddMissiles();
+			bufferMap = bitmap;
+			splitContainer1.Panel2.BackgroundImage = bufferMap;
+		}
+
 		/// <summary>
 		/// Developer:		Anthony Harris
 		/// Function Name:	GameLoop
@@ -367,30 +408,8 @@ namespace TankGame
 		/// </summary>
 		public void GameLoop()
 		{
-			//Determine and assign the Pixel:GameTile ratio and assign it to
-			//the static Player and Missile class variables xScale and yScale.
-			Player.xScale = splitContainer1.Panel2.Width / WIDTH_IN_TILES;
-			Player.yScale = splitContainer1.Panel2.Height / HEIGHT_IN_TILES;
-			Missile.xScale = Player.xScale;
-			Missile.yScale = Player.yScale;
-
-			//Equivalent of an Update()
-			red.updatePlayer(mapBlocks);
-			blue.updatePlayer(mapBlocks);
-			for(int i = 0; i < red.missiles.Length; ++i)
-			{
-				red.missiles[i].updateMissile(mapBlocks);
-			}
-			for (int i = 0; i < red.missiles.Length; ++i)
-			{
-				blue.missiles[i].updateMissile(mapBlocks);
-			}
-
-			//Equivalent of a Render()
-			AddBackground();
-			AddPlayers();
-			AddMissiles();
-			splitContainer1.Panel2.BackgroundImage = bitmap;
+			Update();
+			Render();
 		}
 	}
 }

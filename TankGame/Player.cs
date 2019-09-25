@@ -10,6 +10,7 @@ namespace TankGame
 {
 	public class Player
 	{
+		private NeuralNetwork botBrain;
 		public bool isHuman;
 		public bool isAlive = true;
 		public Bitmap bodyBase;
@@ -37,6 +38,11 @@ namespace TankGame
 			bodyOriented = findOrientedImage(bodyBase, bodyOrientation);
 			turretOriented = findOrientedImage(turretBase, turretOrientation);
 			isHuman = isHum;
+
+			if (!isHuman)
+			{
+				//botBrain = new NeuralNetwork();
+			}
 		}
 
 		public Bitmap findOrientedImage(Bitmap baseImage, Orientation orientation)
