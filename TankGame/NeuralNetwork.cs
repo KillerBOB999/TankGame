@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TankGame
 {
-	class NeuralNetwork
+	public class NeuralNetwork
 	{
 		List<Edge> edges;
 		int nextID;
@@ -18,5 +18,7 @@ namespace TankGame
 			nextID = nID;
 			currentInputLayerIDs = inputLayerIDs;
 		}
+
+		public NeuralNetwork() { }
 	}
 }

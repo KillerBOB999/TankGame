@@ -82,6 +82,8 @@ namespace TankGame
 			{
 				Position newPosition = new Position(position.x + velocity.x, position.y + velocity.y);
 
+				map[position.x, position.y].isOccupied = false;
+				map[position.x, position.y].isOccMissile = false;
 				if (!map[newPosition.x, newPosition.y].isWall)
 				{
 					position.x = newPosition.x;
@@ -96,6 +98,11 @@ namespace TankGame
 				{
 					isActive = false;
 					isContact = true;
+				}
+				if (isActive)
+				{
+					map[newPosition.x, newPosition.y].isOccupied = true;
+					map[newPosition.x, newPosition.y].isOccMissile = true;
 				}
 
 				missileOriented = findOrientedImage(scaleMissile(), missileOrientation);

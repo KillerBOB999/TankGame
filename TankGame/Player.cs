@@ -10,8 +10,9 @@ namespace TankGame
 {
 	public class Player
 	{
-		private NeuralNetwork botBrain;
+		public NeuralNetwork botBrain;
 		public bool isHuman;
+		public bool isRedPlayer;
 		public bool isAlive = true;
 		public Bitmap bodyBase;
 		public Bitmap turretBase;
@@ -29,7 +30,7 @@ namespace TankGame
 		public Missile[] missiles = { new Missile(), new Missile() };
 
 		//Constructor
-		public Player(string tankBody, string tankTurret, Orientation bodyOrientation, Orientation gunOrientation, bool isHum)
+		public Player(string tankBody, string tankTurret, Orientation bodyOrientation, Orientation gunOrientation, bool isHum, bool isRed)
 		{
 			bodyBase = new Bitmap(Image.FromFile(tankBody));
 			turretBase = new Bitmap(Image.FromFile(tankTurret));
@@ -38,10 +39,11 @@ namespace TankGame
 			bodyOriented = findOrientedImage(bodyBase, bodyOrientation);
 			turretOriented = findOrientedImage(turretBase, turretOrientation);
 			isHuman = isHum;
+			isRedPlayer = isRed;
 
 			if (!isHuman)
 			{
-				//botBrain = new NeuralNetwork();
+				botBrain = new NeuralNetwork();
 			}
 		}
 
@@ -173,9 +175,25 @@ namespace TankGame
 			if(map[newPosition.x, newPosition.y].isFloor && !map[newPosition.x, newPosition.y].isOccupied)
 			{
 				map[position.x, position.y].isOccupied = false;
+				if (isRedPlayer)
+				{
+					map[position.x, position.y].isOccRed = false;
+				}
+				else
+				{
+					map[position.x, position.y].isOccBlue = false;
+				}
 				position.x = newPosition.x;
 				position.y = newPosition.y;
 				map[position.x, position.y].isOccupied = true;
+				if (isRedPlayer)
+				{
+					map[position.x, position.y].isOccRed = true;
+				}
+				else
+				{
+					map[position.x, position.y].isOccBlue = true;
+				}
 			}
 
 			bodyOriented = findOrientedImage(scaleBody(), tankOrientation);

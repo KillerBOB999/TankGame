@@ -78,9 +78,9 @@ namespace TankGame
 		//Pull in external resources and initialize core entity objects
 		string terrainMapN = File.ReadAllText("Resources/Maps/TerrainMaps/TerrainMap2.JSON");
 		Player red = new Player("Resources/images/Red_TankBody.png", "Resources/images/Turret.png", 
-								0, 0, isRedHumanPlaying);
+								0, 0, isRedHumanPlaying, true);
 		Player blue = new Player("Resources/images/Blue_TankBody.png", "Resources/images/Turret.png", 
-								0, 0, isBlueHumanPlaying);
+								0, 0, isBlueHumanPlaying, false);
 
 		//Define useful variables
 		const int WIDTH_IN_TILES = 25;		//Number of tiles in the width of the world
@@ -108,6 +108,9 @@ namespace TankGame
 		/// </summary>
 		private void InitializeData()
 		{
+			List<Edge> tempEdges = new List<Edge>();
+			List<int> inputLayer = new List<int>();
+			Random rand = new Random();
 			xMapBlock = 0;
 			yMapBlock = 0;
 			for (int index = 0; index < terrainMapN.Length; ++index)
@@ -122,11 +125,29 @@ namespace TankGame
 				}
 				++mapStateIterator;
 			}
+			for (int x = 0; x < WIDTH_IN_TILES; ++x)
+			{
+				for (int y = 0; y < HEIGHT_IN_TILES; ++y)
+				{
+					for (int i = 1; i < MapBlock.numOfStates * WIDTH_IN_TILES * HEIGHT_IN_TILES; ++i)
+					{
+						inputLayer.Add(i);
+						for (int commandCount = MapBlock.numOfStates * WIDTH_IN_TILES * HEIGHT_IN_TILES;
+							commandCount < MapBlock.numOfStates * WIDTH_IN_TILES * HEIGHT_IN_TILES + (int)ControlCommand.Space;
+							++commandCount)
+						{
+							tempEdges.Add(new Edge((x + 1) * (y + 1), commandCount, 1, 0));
+						}
+					}
+				}
+			}
 			red.position.x = red.spawnPoint.x;
 			red.position.y = red.spawnPoint.y;
+			red.botBrain = new NeuralNetwork(tempEdges, MapBlock.numOfStates * WIDTH_IN_TILES * HEIGHT_IN_TILES + (int)ControlCommand.Space, inputLayer);
 
 			blue.position.x = blue.spawnPoint.x;
 			blue.position.y = blue.spawnPoint.y;
+			blue.botBrain = new NeuralNetwork(tempEdges, MapBlock.numOfStates * WIDTH_IN_TILES * HEIGHT_IN_TILES + (int)ControlCommand.Space, inputLayer);
 		}
 
 		/// <summary>
@@ -196,6 +217,7 @@ namespace TankGame
 								bitmap.SetPixel(x_index, y_index, System.Drawing.Color.Black);
 							}
 						}
+						mapBlocks[xMapBlock, yMapBlock].updateStates();
 						break;
 					case Color.Gray:
 						for (int y_index = 0 + offset.y; y_index < y + offset.y; ++y_index)
@@ -214,6 +236,7 @@ namespace TankGame
 								bitmap.SetPixel(x_index, y_index, System.Drawing.Color.White);
 							}
 						}
+						mapBlocks[xMapBlock, yMapBlock].updateStates();
 						break;
 					case Color.Blue:
 						for (int y_index = 0 + offset.y; y_index < y + offset.y; ++y_index)
@@ -223,6 +246,7 @@ namespace TankGame
 								bitmap.SetPixel(x_index, y_index, System.Drawing.Color.White);
 							}
 						}
+						mapBlocks[xMapBlock, yMapBlock].updateStates();
 						break;
 					default:
 						break;

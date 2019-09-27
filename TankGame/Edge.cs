@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TankGame
 {
-	class Edge
+	public class Edge
 	{
 		int inNeuronID;
 		int outNeuronID;
