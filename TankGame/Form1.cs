@@ -76,10 +76,10 @@ namespace TankGame
 		const bool isBlueHumanPlaying = false;
 
 		//Pull in external resources and initialize core entity objects
-		string terrainMapN = File.ReadAllText("Resources/Maps/TerrainMaps/TerrainMap2.JSON");
-		Player red = new Player("Resources/images/Red_TankBody.png", "Resources/images/Turret.png", 
+		string terrainMapN = File.ReadAllText("../../Resources/Maps/TerrainMaps/TerrainMap2.JSON");
+		Player red = new Player("../../Resources/images/Red_TankBody.png", "../../Resources/images/Turret.png", 
 								0, 0, isRedHumanPlaying, true);
-		Player blue = new Player("Resources/images/Blue_TankBody.png", "Resources/images/Turret.png", 
+		Player blue = new Player("../../Resources/images/Blue_TankBody.png", "../../Resources/images/Turret.png", 
 								0, 0, isBlueHumanPlaying, false);
 
 		//Define useful variables

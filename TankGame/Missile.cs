@@ -16,8 +16,8 @@ namespace TankGame
 	/// </summary>
 	public class Missile
 	{
-		public static Bitmap missileBase = new Bitmap(Image.FromFile("Resources/images/BaseRocket.png"));
-		public static Bitmap explosion = new Bitmap(Image.FromFile("Resources/images/BaseExplosion.png"));
+		public static Bitmap missileBase = new Bitmap(Image.FromFile("../../Resources/images/BaseRocket.png"));
+		public static Bitmap explosion = new Bitmap(Image.FromFile("../../Resources/images/BaseExplosion.png"));
 		public Bitmap missileOriented;
 		public Bitmap missileScaled;
 		public Bitmap explosionScaled;
