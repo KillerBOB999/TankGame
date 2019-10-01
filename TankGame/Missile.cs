@@ -11,8 +11,8 @@ namespace TankGame
 	/// Developer:		Anthony Harris
 	/// Class Name:		Missile
 	/// Description:	Represents the missiles shot by the tanks
-	///	Last Modified:	19 September 2019
-	///	Modification:	Added comments, optimized memory usage, added explosion mechanics
+	///	Last Modified:	01 October 2019
+	///	Modification:	Added relative path functionality
 	/// </summary>
 	public class Missile
 	{

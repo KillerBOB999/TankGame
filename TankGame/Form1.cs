@@ -91,8 +91,6 @@ namespace TankGame
 		Position offset = new Position();   //Position offset in pixels for use when drawing the bitmap
 		Bitmap bitmap;                      //The map in pixels
 		Bitmap bufferMap;
-		bool[] mapState = new bool[WIDTH_IN_TILES * HEIGHT_IN_TILES];
-		int mapStateIterator = 0;
 
 		//END GLOBALS------------------------------------------------------------------------------------
 
@@ -103,8 +101,8 @@ namespace TankGame
 		/// Returns:		None
 		/// Description:	Iterates through the JSON map file and defines the starting
 		///					points for each entity.
-		///	Last Modified:	19 September 2019
-		///	Modification:	Added comments
+		///	Last Modified:	01 October 2019
+		///	Modification:	Started work on edge initialization for neural network
 		/// </summary>
 		private void InitializeData()
 		{
@@ -123,7 +121,6 @@ namespace TankGame
 					//Call the function to define the type of tile
 					TileType(pass);
 				}
-				++mapStateIterator;
 			}
 			for (int x = 0; x < WIDTH_IN_TILES; ++x)
 			{
@@ -369,9 +366,8 @@ namespace TankGame
 					blue.spawnPoint.x = xMapBlock;
 					blue.spawnPoint.y = yMapBlock;
 					break;
-				default:
-					return;
 			}
+			mapBlocks[xMapBlock, yMapBlock].updateStates();
 
 			++xMapBlock;
 			if(xMapBlock >= WIDTH_IN_TILES)
