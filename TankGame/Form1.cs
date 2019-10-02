@@ -19,40 +19,32 @@ namespace TankGame
 			InitializeComponent();
 			Focus();
 			InitializeData();
-			GameLoop();
-			Application.Idle += HandleApplicationIdle;
+            Timer timer = new Timer();
+            timer.Interval = 5;        //# of milliseconds
+            timer.Tick += Timer_Tick;
+            timer.Start();
 		}
 
-		/// <summary>
-		/// Developer:		Anthony Harris
-		/// Handler Name:	HandleApplicationIdle
-		/// Parameters:		Included but not used
-		/// Returns:		None
-		/// Description:	When the Application.Idle event is triggered, this
-		///					handler is called. This acts as a simple Game Loop timer
-		///	Last Modified:	19 September 2019
-		///	Modification:	Initialized handler and added comments
-		/// </summary>
-		void HandleApplicationIdle(object sender, EventArgs e)
-		{
-			GameLoop();
-		}
+        private void Timer_Tick(object sender, EventArgs e)
+        {
+            GameLoop();
+        }
 
-		/// <summary>
-		/// Developer:		Anthony Harris
-		/// Function Name:	ProcessCmdKey
-		/// Parameters:		ref Message msg
-		///						Use: none
-		///					Keys keyData
-		///						Use: Represents the key pressed that triggered the event.
-		///							Is sent to the Player objects to be handled.
-		/// Returns:		True
-		/// Description:	Takes a key stroke as an input, determines which player is human,
-		///					and passes the key to said player.
-		///	Last Modified:	19 September 2019
-		///	Modification:	Added comments
-		/// </summary>
-		protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        /// <summary>
+        /// Developer:		Anthony Harris
+        /// Function Name:	ProcessCmdKey
+        /// Parameters:		ref Message msg
+        ///						Use: none
+        ///					Keys keyData
+        ///						Use: Represents the key pressed that triggered the event.
+        ///							Is sent to the Player objects to be handled.
+        /// Returns:		True
+        /// Description:	Takes a key stroke as an input, determines which player is human,
+        ///					and passes the key to said player.
+        ///	Last Modified:	19 September 2019
+        ///	Modification:	Added comments
+        /// </summary>
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
 		{
 			if (red.isHuman == true)
 			{
@@ -75,11 +67,11 @@ namespace TankGame
 		const bool isRedHumanPlaying = true;
 		const bool isBlueHumanPlaying = false;
 
-		//Pull in external resources and initialize core entity objects
-		string terrainMapN = File.ReadAllText("../../Resources/Maps/TerrainMaps/TerrainMap2.JSON");
-		Player red = new Player("../../Resources/images/Red_TankBody.png", "../../Resources/images/Turret.png", 
+        //Pull in external resources and initialize core entity objects
+        string terrainMapN = File.ReadAllText("Resources/Maps/TerrainMaps/TerrainMap2.JSON");
+		Player red = new Player("Resources/images/Red_TankBody.png", "Resources/images/Turret.png", 
 								0, 0, isRedHumanPlaying, true);
-		Player blue = new Player("../../Resources/images/Blue_TankBody.png", "../../Resources/images/Turret.png", 
+		Player blue = new Player("Resources/images/Blue_TankBody.png", "Resources/images/Turret.png", 
 								0, 0, isBlueHumanPlaying, false);
 
 		//Define useful variables
@@ -89,8 +81,6 @@ namespace TankGame
 		int yMapBlock;						//Used as iterator in mapBlocks[]
 		MapBlock[,] mapBlocks = new MapBlock[WIDTH_IN_TILES, HEIGHT_IN_TILES];//The map in gametiles
 		Position offset = new Position();   //Position offset in pixels for use when drawing the bitmap
-		Bitmap bitmap;                      //The map in pixels
-		Bitmap bufferMap;
 
 		//END GLOBALS------------------------------------------------------------------------------------
 
@@ -100,9 +90,11 @@ namespace TankGame
 		/// Parameters:		None
 		/// Returns:		None
 		/// Description:	Iterates through the JSON map file and defines the starting
-		///					points for each entity.
-		///	Last Modified:	01 October 2019
-		///	Modification:	Started work on edge initialization for neural network
+		///					points for each entity, initializes the neural network data,
+        ///					and initializes the entities.
+		///	Last Modified:	02 October 2019
+		///	Modification:	Successfully implemented logic to initialize the Edges of the
+        ///	                neural networks.
 		/// </summary>
 		private void InitializeData()
 		{
@@ -122,54 +114,54 @@ namespace TankGame
 					TileType(pass);
 				}
 			}
+
+            //Create the edges of the neural networks to be used
+            int inLayerId = 1;
+            int outLayerId;
 			for (int x = 0; x < WIDTH_IN_TILES; ++x)
 			{
 				for (int y = 0; y < HEIGHT_IN_TILES; ++y)
 				{
-					for (int i = 1; i < MapBlock.numOfStates * WIDTH_IN_TILES * HEIGHT_IN_TILES; ++i)
+					for (int z = 0; z < MapBlock.numOfStates; ++z)
 					{
-						inputLayer.Add(i);
-						for (int commandCount = MapBlock.numOfStates * WIDTH_IN_TILES * HEIGHT_IN_TILES;
-							commandCount < MapBlock.numOfStates * WIDTH_IN_TILES * HEIGHT_IN_TILES + (int)ControlCommand.Space;
-							++commandCount)
+						inputLayer.Add(inLayerId);
+                        for (int command = (int)ControlCommand.NONE; command < (int)ControlCommand.FINAL_UNUSED; ++command)
 						{
-							tempEdges.Add(new Edge((x + 1) * (y + 1), commandCount, 1, 0));
+                            outLayerId = WIDTH_IN_TILES * HEIGHT_IN_TILES * MapBlock.numOfStates + command + 1;
+							tempEdges.Add(new Edge(inLayerId, outLayerId, 1, 0));
 						}
-					}
+                        inLayerId++;
+                    }
 				}
 			}
-			red.position.x = red.spawnPoint.x;
+
+            //Initialize the players
+            red.position.x = red.spawnPoint.x;
 			red.position.y = red.spawnPoint.y;
-			red.botBrain = new NeuralNetwork(tempEdges, MapBlock.numOfStates * WIDTH_IN_TILES * HEIGHT_IN_TILES + (int)ControlCommand.Space, inputLayer);
+			red.botBrain = new NeuralNetwork(tempEdges, MapBlock.numOfStates * WIDTH_IN_TILES * HEIGHT_IN_TILES + (int)ControlCommand.FINAL_UNUSED, inputLayer);
 
 			blue.position.x = blue.spawnPoint.x;
 			blue.position.y = blue.spawnPoint.y;
-			blue.botBrain = new NeuralNetwork(tempEdges, MapBlock.numOfStates * WIDTH_IN_TILES * HEIGHT_IN_TILES + (int)ControlCommand.Space, inputLayer);
+			blue.botBrain = new NeuralNetwork(tempEdges, MapBlock.numOfStates * WIDTH_IN_TILES * HEIGHT_IN_TILES + (int)ControlCommand.FINAL_UNUSED, inputLayer);
 		}
 
 		/// <summary>
 		/// Developer:		Anthony Harris
 		/// Function Name:	AddBackGround
-		/// Parameters:		None
+		/// Parameters:		Graphics graphics
+        ///                     Use:    Graphics object is used to update the image of the
+        ///                             current state of the world
 		/// Returns:		None
-		/// Description:	Determines the definition of each pixel in the bitmap
-		///					based on the values found in the mapBlocks array of
-		///					MapBlock objects and adds them to the world bitmap
-		///	Last Modified:	19 September 2019
-		///	Modification:	Added comments and optimized memory usage
+		/// Description:	Determines the current state of the background image
+		///	Last Modified:	02 October 2019
+		///	Modification:	Redesigned to used graphics objects as opposed to the previous
+        ///	                brute force pixel value assignments
 		/// </summary>
-		private void AddBackground()
+		private void AddBackground(Graphics graphics)
 		{
 			//Proportional number of pixels that represent the pixel per game tile
 			int x = splitContainer1.Panel2.Width / WIDTH_IN_TILES;
 			int y = splitContainer1.Panel2.Height / HEIGHT_IN_TILES;
-
-			//Bitmap to be used
-			if(bitmap != null)
-			{
-				bitmap.Dispose();
-			}
-			bitmap = new Bitmap(splitContainer1.Panel2.Width, splitContainer1.Panel2.Height);
 
 			xMapBlock = 0;
 			yMapBlock = 0;
@@ -204,135 +196,92 @@ namespace TankGame
 					yMapBlock = 0;
 				}
 
+                Brush brush = null;
 				switch(mapBlocks[xMapBlock, yMapBlock].color)
 				{
 					case Color.Black:
-						for (int y_index = 0 + offset.y; y_index < y + offset.y; ++y_index)
-						{
-							for (int x_index = 0 + offset.x; x_index < x + offset.x; ++x_index)
-							{
-								bitmap.SetPixel(x_index, y_index, System.Drawing.Color.Black);
-							}
-						}
-						mapBlocks[xMapBlock, yMapBlock].updateStates();
+                        brush = new SolidBrush(System.Drawing.Color.Black);
+                        mapBlocks[xMapBlock, yMapBlock].updateStates();
 						break;
 					case Color.Gray:
-						for (int y_index = 0 + offset.y; y_index < y + offset.y; ++y_index)
-						{
-							for (int x_index = 0 + offset.x; x_index < x + offset.x; ++x_index)
-							{
-								bitmap.SetPixel(x_index, y_index, System.Drawing.Color.Gray);
-							}
-						}
-						break;
+                        brush = new SolidBrush(System.Drawing.Color.Gray);
+                        break;
 					case Color.Red:
-						for (int y_index = 0 + offset.y; y_index < y + offset.y; ++y_index)
-						{
-							for (int x_index = 0 + offset.x; x_index < x + offset.x; ++x_index)
-							{
-								bitmap.SetPixel(x_index, y_index, System.Drawing.Color.White);
-							}
-						}
-						mapBlocks[xMapBlock, yMapBlock].updateStates();
+                        brush = new SolidBrush(System.Drawing.Color.White);
+                        mapBlocks[xMapBlock, yMapBlock].updateStates();
 						break;
 					case Color.Blue:
-						for (int y_index = 0 + offset.y; y_index < y + offset.y; ++y_index)
-						{
-							for (int x_index = 0 + offset.x; x_index < x + offset.x; ++x_index)
-							{
-								bitmap.SetPixel(x_index, y_index, System.Drawing.Color.White);
-							}
-						}
+                        brush = new SolidBrush(System.Drawing.Color.White);
 						mapBlocks[xMapBlock, yMapBlock].updateStates();
 						break;
-					default:
-						break;
 				}
+                graphics.FillRectangle(brush, offset.x, offset.y, x, y);
+                brush.Dispose();
 
-				//Increment the offset
-				offset.x += x;
+                //Increment the offset
+                offset.x += x;
 				++xMapBlock;
 			}
 		}
 
-		/// <summary>
-		/// Developer:		Anthony Harris
-		/// Function Name:	AddPlayers
-		/// Parameters:		None
-		/// Returns:		None
-		/// Description:	Adds the player images to the existing bitmap
-		/// Last Modified:	19 September 2019
-		/// Modification:	Added comments and resolved memory issues
-		/// </summary>
-		private void AddPlayers()
+        /// <summary>
+        /// Developer:		Anthony Harris
+        /// Function Name:	AddPlayers
+        /// Parameters:		Graphics graphics
+        ///                     Use:    Graphics object is used to update the image of the
+        ///                             current state of the world
+        /// Returns:		None
+        /// Description:	Adds the player images to the existing background image
+        /// Last Modified:	02 October 2019
+        /// Modification:	Redesigned to used graphics objects as opposed to the previous
+        ///	                brute force pixel value assignments
+        /// </summary>
+        private void AddPlayers(Graphics graphics)
 		{
-			//Temporary bitmap to be used for manipulation
-			Bitmap bm = new Bitmap(bitmap.Width, bitmap.Height);
-
-			using (Graphics gr = Graphics.FromImage(bm))
-			{
-				gr.DrawImage(bitmap, new Point(0, 0));
-				gr.DrawImage(red.bodyOriented, new Point(red.position.x * Player.xScale, red.position.y * Player.yScale));
-				gr.DrawImage(red.turretOriented, new Point(red.position.x * Player.xScale, red.position.y * Player.yScale));
-				gr.DrawImage(blue.bodyOriented, new Point(blue.position.x * Player.xScale, blue.position.y * Player.yScale));
-				gr.DrawImage(blue.turretOriented, new Point(blue.position.x * Player.xScale, blue.position.y * Player.yScale));
-			}
-
-			//Remove previous map definition
-			bitmap.Dispose();
-
-			//Assign new map definition
-			bitmap = bm;
+			graphics.DrawImage(red.bodyOriented, new Point(red.position.x * Player.xScale, red.position.y * Player.yScale));
+			graphics.DrawImage(red.turretOriented, new Point(red.position.x * Player.xScale, red.position.y * Player.yScale));
+			graphics.DrawImage(blue.bodyOriented, new Point(blue.position.x * Player.xScale, blue.position.y * Player.yScale));
+			graphics.DrawImage(blue.turretOriented, new Point(blue.position.x * Player.xScale, blue.position.y * Player.yScale));
 		}
 
-		/// <summary>
-		/// Developer:		Anthony Harris
-		/// Function Name:	AddMissiles
-		/// Parameters:		None	
-		/// Returns:		None
-		/// Description:	Adds the missile images to the existing bitmap.
-		/// Last Modified:	19 September 2019
-		/// Modification:	Creation and implementation of function/comments
-		/// </summary>
-		private void AddMissiles()
+        /// <summary>
+        /// Developer:		Anthony Harris
+        /// Function Name:	AddMissiles
+        /// Parameters:		Graphics graphics
+        ///                     Use:    Graphics object is used to update the image of the
+        ///                             current state of the world	
+        /// Returns:		None
+        /// Description:	Adds the missile images to the existing background image
+        /// Last Modified:	02 October 2019
+        /// Modification:	Redesigned to used graphics objects as opposed to the previous
+        ///	                brute force pixel value assignments
+        /// </summary>
+        private void AddMissiles(Graphics graphics)
 		{
-			//Temporary bitmap to be used for manipulation
-			Bitmap bm = new Bitmap(bitmap.Width, bitmap.Height);
-
-			using (Graphics gr = Graphics.FromImage(bm))
+			for(int i = 0; i < red.missiles.Length; ++i)
 			{
-				gr.DrawImage(bitmap, new Point(0, 0));
-				for(int i = 0; i < red.missiles.Length; ++i)
+				if (red.missiles[i].isActive)
 				{
-					if (red.missiles[i].isActive)
-					{
-						gr.DrawImage(red.missiles[i].missileOriented, new Point(red.missiles[i].position.x * Missile.xScale, red.missiles[i].position.y * Missile.yScale));
-					}
-					else if (red.missiles[i].isContact)
-					{
-						gr.DrawImage(red.missiles[i].scaleExplosion(), new Point(red.missiles[i].position.x * Missile.xScale, red.missiles[i].position.y * Missile.yScale));
-						red.missiles[i].isContact = false;
-					}
+					graphics.DrawImage(red.missiles[i].missileOriented, new Point(red.missiles[i].position.x * Missile.xScale, red.missiles[i].position.y * Missile.yScale));
 				}
-				for (int i = 0; i < blue.missiles.Length; ++i)
+				else if (red.missiles[i].isContact)
 				{
-					if (blue.missiles[i].isActive)
-					{
-						gr.DrawImage(blue.missiles[i].missileOriented, new Point(blue.missiles[i].position.x * Missile.xScale, blue.missiles[i].position.y * Missile.yScale));
-					}
-					else if (blue.missiles[i].isContact)
-					{
-						gr.DrawImage(blue.missiles[i].scaleExplosion(), new Point(blue.missiles[i].position.x * Missile.xScale, blue.missiles[i].position.y * Missile.yScale));
-						blue.missiles[i].isContact = false;
-					}
+					graphics.DrawImage(red.missiles[i].scaleExplosion(), new Point(red.missiles[i].position.x * Missile.xScale, red.missiles[i].position.y * Missile.yScale));
+					red.missiles[i].isContact = false;
 				}
 			}
-
-			//Remove previous map definition
-			bitmap.Dispose();
-
-			//Assign new map definition
-			bitmap = bm;
+			for (int i = 0; i < blue.missiles.Length; ++i)
+			{
+				if (blue.missiles[i].isActive)
+				{
+					graphics.DrawImage(blue.missiles[i].missileOriented, new Point(blue.missiles[i].position.x * Missile.xScale, blue.missiles[i].position.y * Missile.yScale));
+				}
+				else if (blue.missiles[i].isContact)
+				{
+					graphics.DrawImage(blue.missiles[i].scaleExplosion(), new Point(blue.missiles[i].position.x * Missile.xScale, blue.missiles[i].position.y * Missile.yScale));
+					blue.missiles[i].isContact = false;
+				}
+			}
 		}
 
 		/// <summary>
@@ -381,7 +330,17 @@ namespace TankGame
 			}
 		}
 
-		private void Update()
+        /// <summary>
+        /// Developer:		Anthony Harris
+        /// Function Name:	Update
+        /// Parameters:		None
+        /// Returns:		None
+        /// Description:	Updates the state of the world based upon the
+        ///                 actions of the entities within
+        /// Last Modified:	02 October 2019
+        /// Modification:	Added comment summary
+        /// </summary>
+        private void Update()
 		{
 			currentTime = DateTime.Now;
 			elapsed = currentTime - startTime;
@@ -406,13 +365,33 @@ namespace TankGame
 			}
 		}
 
-		private void Render()
+        /// <summary>
+        /// Developer:		Anthony Harris
+        /// Function Name:	Render
+        /// Parameters:		None
+        /// Returns:		None
+        /// Description:	Displays the state of the world
+        /// Last Modified:	02 October 2019
+        /// Modification:	Added comment summary and adjusted general
+        ///                 structure to support use a local bitmap
+        ///                 object as opposed to global, as well as the
+        ///                 use of a Graphics object to perform efficient
+        ///                 display alterations.
+        /// </summary>
+        private void Render()
 		{
-			AddBackground();
-			AddPlayers();
-			AddMissiles();
-			bufferMap = bitmap;
-			splitContainer1.Panel2.BackgroundImage = bufferMap;
+            Bitmap bmp = new Bitmap(splitContainer1.Panel2.Width, splitContainer1.Panel2.Height);
+            using (Graphics graphics = Graphics.FromImage(bmp))
+            {
+                AddBackground(graphics);
+                AddPlayers(graphics);
+                AddMissiles(graphics);
+            }
+            using (Graphics graphics = splitContainer1.Panel2.CreateGraphics())
+            {
+                graphics.DrawImageUnscaled(bmp, 0, 0);
+            }
+            bmp.Dispose();
 		}
 
 		/// <summary>
@@ -420,10 +399,10 @@ namespace TankGame
 		/// Function Name:	GameLoop
 		/// Parameters:		None
 		/// Returns:		None
-		/// Description:	The typical game loop found in games. While not defined
-		///					as "Render()" and "Update()", the steps found within 
-		///					serve the same purpose.
-		/// Last Modified:	19 September 2019
+		/// Description:	The typical game loop found in games. Calls
+        ///                 Update() to update the state of the world and
+        ///                 then calls Render() to display the image
+		/// Last Modified:	02 October 2019
 		/// Modification:	Added comments.
 		/// </summary>
 		public void GameLoop()

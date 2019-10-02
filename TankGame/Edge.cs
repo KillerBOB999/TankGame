@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace TankGame
 {
-	public class Edge
+    public class Edge
 	{
-		int inNeuronID;
+        int inNeuronID;
 		int outNeuronID;
 		float weight;
 		float bias;
