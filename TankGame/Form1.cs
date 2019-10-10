@@ -99,7 +99,7 @@ namespace TankGame
 		private void InitializeData()
 		{
 			List<Edge> tempEdges = new List<Edge>();
-			List<int> inputLayer = new List<int>();
+			List<int> outputLayer = new List<int>();
 			Random rand = new Random();
 			xMapBlock = 0;
 			yMapBlock = 0;
@@ -116,34 +116,64 @@ namespace TankGame
 			}
 
             //Create the edges of the neural networks to be used
+
             int inLayerId = 1;
             int outLayerId;
-			for (int x = 0; x < WIDTH_IN_TILES; ++x)
-			{
-				for (int y = 0; y < HEIGHT_IN_TILES; ++y)
-				{
-					for (int z = 0; z < MapBlock.numOfStates; ++z)
-					{
-						inputLayer.Add(inLayerId);
-                        for (int command = (int)ControlCommand.NONE; command < (int)ControlCommand.FINAL_UNUSED; ++command)
-						{
-                            outLayerId = WIDTH_IN_TILES * HEIGHT_IN_TILES * MapBlock.numOfStates + command + 1;
-							tempEdges.Add(new Edge(inLayerId, outLayerId, 1, 0));
-						}
-                        inLayerId++;
+
+            //The following is for when you use the entire map as an input.
+
+            //for (int x = 0; x < WIDTH_IN_TILES; ++x)
+            //{
+            //	for (int y = 0; y < HEIGHT_IN_TILES; ++y)
+            //	{
+            //		for (int z = 0; z < MapBlock.numOfStates; ++z)
+            //		{
+            //			inputLayer.Add(inLayerId);
+            //          for (int command = (int)ControlCommand.NONE; command < (int)ControlCommand.FINAL_UNUSED; ++command)
+            //			{
+            //              outLayerId = WIDTH_IN_TILES * HEIGHT_IN_TILES * MapBlock.numOfStates + command + 1;
+            //				tempEdges.Add(new Edge(inLayerId, outLayerId, 1, 0));
+            //			}
+            //          inLayerId++;
+            //      }
+            //	}
+            //}
+
+            //The following is for when you use the tankDegreeToTarget and turretDegreeToTarget
+            //distanceToTarget attributes of player as inputs
+
+            for (int i = 0; i < Player.NUM_OF_INPUTS; ++i)
+            {
+                for (int command = (int)ControlCommand.NONE; command < (int)ControlCommand.FINAL_UNUSED; ++command)
+                {
+                    outLayerId = Player.NUM_OF_INPUTS + command + 1;
+                    tempEdges.Add(new Edge(inLayerId, outLayerId, 1, 0));
+                    if (!outputLayer.Contains(outLayerId))
+                    {
+                        outputLayer.Add(outLayerId);
                     }
-				}
-			}
+                }
+                inLayerId++;
+            }
 
             //Initialize the players
             red.position.x = red.spawnPoint.x;
-			red.position.y = red.spawnPoint.y;
-			red.botBrain = new NeuralNetwork(tempEdges, MapBlock.numOfStates * WIDTH_IN_TILES * HEIGHT_IN_TILES + (int)ControlCommand.FINAL_UNUSED, inputLayer);
+            red.position.y = red.spawnPoint.y;
+			red.botBrain = new NeuralNetwork(tempEdges, MapBlock.numOfStates * WIDTH_IN_TILES * HEIGHT_IN_TILES + (int)ControlCommand.FINAL_UNUSED, outputLayer);
 
 			blue.position.x = blue.spawnPoint.x;
 			blue.position.y = blue.spawnPoint.y;
-			blue.botBrain = new NeuralNetwork(tempEdges, MapBlock.numOfStates * WIDTH_IN_TILES * HEIGHT_IN_TILES + (int)ControlCommand.FINAL_UNUSED, inputLayer);
-		}
+			blue.botBrain = new NeuralNetwork(tempEdges, MapBlock.numOfStates * WIDTH_IN_TILES * HEIGHT_IN_TILES + (int)ControlCommand.FINAL_UNUSED, outputLayer);
+
+            red.calcDegreeAndDistanceToTarget(blue.position.x, blue.position.y);
+            blue.calcDegreeAndDistanceToTarget(red.position.x, red.position.y);
+
+            List<double> redInput = new List<double> { red.distanceToTarget, red.degreeToTarget };
+            List<double> blueInput = new List<double> { blue.distanceToTarget, blue.degreeToTarget };
+
+            red.botBrain.feedForward(redInput);
+            blue.botBrain.feedForward(blueInput);
+        }
 
 		/// <summary>
 		/// Developer:		Anthony Harris
@@ -363,6 +393,8 @@ namespace TankGame
 			{
 				blue.missiles[i].updateMissile(mapBlocks);
 			}
+            red.calcDegreeAndDistanceToTarget(blue.position.x, blue.position.y);
+            blue.calcDegreeAndDistanceToTarget(red.position.x, red.position.y);
 		}
 
         /// <summary>

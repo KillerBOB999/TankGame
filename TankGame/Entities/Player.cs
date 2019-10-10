@@ -29,6 +29,11 @@ namespace TankGame
 		public Orientation turretOrientation = new Orientation();
 		public Missile[] missiles = { new Missile(), new Missile() };
 
+        //Temporary inputs to simple net
+        public static int NUM_OF_INPUTS = 2;
+        public double degreeToTarget;
+        public double distanceToTarget;
+
 		//Constructor
 		public Player(string tankBody, string tankTurret, Orientation bodyOrientation, Orientation gunOrientation, bool isHum, bool isRed)
 		{
@@ -66,6 +71,30 @@ namespace TankGame
 					return baseImage;
 			}
 		}
+
+        public void calcDegreeAndDistanceToTarget(int targetX, int targetY)
+        {
+            int deltaX = position.x - targetX;
+            int deltaY = position.y - targetY;
+
+            distanceToTarget = Math.Sqrt(Math.Pow(deltaX, 2) + Math.Pow(deltaY, 2));
+            if (deltaX == 0)
+            {
+                if (deltaY > 0)
+                {
+                    degreeToTarget = Math.PI;
+                }
+                else
+                {
+                    degreeToTarget = 3 * Math.PI;
+                }
+            }
+            else
+            {
+                degreeToTarget = Math.Atan(deltaY / deltaX);
+            }
+
+        }
 
 		public void keyController(Keys pressedKey)
 		{
@@ -201,8 +230,6 @@ namespace TankGame
 
 			velocity.x = 0;
 			velocity.y = 0;
-
-			newPosition = null;
 		}
 
 		public Bitmap scaleBody()
