@@ -8,6 +8,7 @@ namespace TankGame
 {
 	public class NeuralNetwork
 	{
+        public Dictionary<int, Dictionary<int, Edge>> edgeDict;
 		public List<Edge> edges;
 		public int nextID;
         public List<int> outputLayerIDs;
@@ -25,9 +26,18 @@ namespace TankGame
             {
                 topologicalOrdering.Add(i);
             }
+            updateEdgeDict(edges);
 		}
 
 		public NeuralNetwork() { }
+        public NeuralNetwork(NeuralNetwork neuralNetwork)
+        {
+            edges = new List<Edge>(neuralNetwork.edges);
+            nextID = neuralNetwork.nextID;
+            outputLayerIDs = new List<int>(neuralNetwork.outputLayerIDs);
+            topologicalOrdering = new List<int>(neuralNetwork.topologicalOrdering);
+            updateEdgeDict(edges);
+        }
 
         public Dictionary<int, double> feedForward(List<double>inputActivationValues)
         {
@@ -63,6 +73,41 @@ namespace TankGame
 
             sizeOfOutputLayer = outputLayer.Count;
             return outputLayer;
+        }
+
+        public void updateEdgeDict(List<Edge> e)
+        {
+            if (edgeDict != null && edgeDict.ContainsKey(1)) { 
+                edgeDict.Clear();
+            }
+            foreach (Edge edge in e)
+            {
+                if (edgeDict == null)
+                {
+                    edgeDict = new Dictionary<int, Dictionary<int, Edge>>() 
+                    { 
+                        { 
+                            edge.inNeuronID, new Dictionary<int, Edge>() 
+                            {
+                                { 
+                                    edge.outNeuronID, edge 
+                                } 
+                            } 
+                        } 
+                    };
+                }
+                if (!edgeDict.ContainsKey(edge.inNeuronID))
+                {
+                    edgeDict.Add(edge.inNeuronID, new Dictionary<int, Edge> { { edge.outNeuronID, edge } });
+                }
+                else
+                {
+                    if (!edgeDict[edge.inNeuronID].ContainsKey(edge.outNeuronID))
+                    {
+                        edgeDict[edge.inNeuronID].Add(edge.outNeuronID, edge);
+                    }
+                }
+            }
         }
 	}
 }

@@ -118,36 +118,22 @@ namespace TankGame.ArtificialIntelligence.NEAT
         {
             double papaContribution = 0.6;
             double mamaContribution = 0.4;
-            List<Edge> babyEdges = new List<Edge>();
-            for(int inputNode = 1; inputNode <= NeuralNetwork.sizeOfInputLayer; ++inputNode)
-            {
-                for(int outputNode = NeuralNetwork.sizeOfInputLayer + 1; 
-                    outputNode <= NeuralNetwork.sizeOfInputLayer + NeuralNetwork.sizeOfOutputLayer; 
-                    ++outputNode)
-                {
-                    babyEdges.Add(new Edge(inputNode, outputNode, 1, 0));
-                }
-            }
+            NeuralNetwork baby = new NeuralNetwork(papa);
 
-            Edge tempEdge;
-            foreach(Edge mamaEdge in mama.edges)
+            foreach (Edge mamaEdge in mama.edges)
             {
-                foreach(Edge papaEdge in papa.edges)
+                foreach (Edge babyEdge in baby.edges)
                 {
-                    if(mamaEdge.inNeuronID == papaEdge.inNeuronID && mamaEdge.outNeuronID == papaEdge.outNeuronID)
+                    if (mamaEdge.inNeuronID == babyEdge.inNeuronID && mamaEdge.outNeuronID == babyEdge.outNeuronID)
                     {
-                        tempEdge = new Edge(papaEdge.inNeuronID, papaEdge.outNeuronID,
-                            papaContribution * papaEdge.weight + mamaContribution * mamaEdge.weight,
-                            papaContribution * papaEdge.bias + mamaContribution * mamaEdge.bias);
-                        foreach(Edge babyEdge in babyEdges)
-                        {
-                            
-                        }
+                        babyEdge.weight = papaContribution * babyEdge.weight + mamaContribution * mamaEdge.weight;
+                        babyEdge.bias = papaContribution * babyEdge.bias + mamaContribution * mamaEdge.bias;
                     }
                 }
             }
 
-            return new NeuralNetwork();
+            baby.updateEdgeDict(baby.edges);
+            return baby;
         }
     }
 }
