@@ -8,17 +8,20 @@ namespace TankGame.ArtificialIntelligence.NEAT
 {
     static class Mutatinator
     {
+        enum TypesOfMutation
+        {
+            FIRST_UNUSED, AddNewNode, AddNewEdge, RemoveExistingEdge, ChangeExistingWeight, ChangeExistingBias, LAST_UNUSED
+        };
         static Random rng = new Random();
-        static int numOfMutationOptions = 5;
         public static void mutate(NeuralNetwork neuralNetwork)
         {
-            int selection = rng.Next(1, numOfMutationOptions);
-            switch (selection)
+            TypesOfMutation mutationChoice = (TypesOfMutation)rng.Next((int)TypesOfMutation.FIRST_UNUSED + 1, (int)TypesOfMutation.LAST_UNUSED - 1);
+            switch (mutationChoice)
             {
-                case 1:
+                case TypesOfMutation.AddNewNode:
                     addNode(neuralNetwork);
                     break;
-                case 2:
+                case TypesOfMutation.AddNewEdge:
                     int attemptedInputNode = rng.Next(1, neuralNetwork.nextID - 1);
                     int attemptedOutputNode = rng.Next(NeuralNetwork.sizeOfInputLayer + 1, neuralNetwork.nextID - 1);
 
@@ -28,13 +31,13 @@ namespace TankGame.ArtificialIntelligence.NEAT
                     }
 
                     break;
-                case 3:
+                case TypesOfMutation.RemoveExistingEdge:
                     removeEdge(neuralNetwork, rng.Next(0, neuralNetwork.edges.Count - 1));
                     break;
-                case 4:
+                case TypesOfMutation.ChangeExistingWeight:
                     changeWeight(neuralNetwork);
                     break;
-                case 5:
+                case TypesOfMutation.ChangeExistingBias:
                     changeBias(neuralNetwork);
                     break;
             }

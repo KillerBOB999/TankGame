@@ -71,7 +71,12 @@ namespace TankGame
                 }
             }
 
-            sizeOfOutputLayer = outputLayer.Count;
+            for (int i = 0; i < outputLayerIDs.Count(); ++i)
+            {
+                outputLayer.Add(outputLayerIDs[i], currentProgress[outputLayerIDs[i]]);
+            }
+
+            sizeOfOutputLayer = outputLayer.Count();
             return outputLayer;
         }
 

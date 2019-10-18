@@ -81,22 +81,25 @@ namespace TankGame
 		int yMapBlock;						//Used as iterator in mapBlocks[]
 		MapBlock[,] mapBlocks = new MapBlock[WIDTH_IN_TILES, HEIGHT_IN_TILES];//The map in gametiles
 		Position offset = new Position();   //Position offset in pixels for use when drawing the bitmap
+        List<double> redInput = new List<double>();
+        List<double> blueInput = new List<double>();
 
-		//END GLOBALS------------------------------------------------------------------------------------
 
-		/// <summary>
-		/// Developer:		Anthony Harris
-		/// Function Name:	InitializeData()
-		/// Parameters:		None
-		/// Returns:		None
-		/// Description:	Iterates through the JSON map file and defines the starting
-		///					points for each entity, initializes the neural network data,
+        //END GLOBALS------------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Developer:		Anthony Harris
+        /// Function Name:	InitializeData()
+        /// Parameters:		None
+        /// Returns:		None
+        /// Description:	Iterates through the JSON map file and defines the starting
+        ///					points for each entity, initializes the neural network data,
         ///					and initializes the entities.
-		///	Last Modified:	02 October 2019
-		///	Modification:	Successfully implemented logic to initialize the Edges of the
+        ///	Last Modified:	02 October 2019
+        ///	Modification:	Successfully implemented logic to initialize the Edges of the
         ///	                neural networks.
-		/// </summary>
-		private void InitializeData()
+        /// </summary>
+        private void InitializeData()
 		{
 			List<Edge> tempEdges = new List<Edge>();
 			List<int> outputLayer = new List<int>();
@@ -142,12 +145,13 @@ namespace TankGame
             //The following is for when you use the tankDegreeToTarget and turretDegreeToTarget
             //distanceToTarget attributes of player as inputs
 
+            Random rng = new Random();
             for (int i = 0; i < Player.NUM_OF_INPUTS; ++i)
             {
                 for (int command = (int)ControlCommand.NONE; command < (int)ControlCommand.FINAL_UNUSED; ++command)
                 {
                     outLayerId = Player.NUM_OF_INPUTS + command + 1;
-                    tempEdges.Add(new Edge(inLayerId, outLayerId, 1, 0));
+                    tempEdges.Add(new Edge(inLayerId, outLayerId, rng.NextDouble(),rng.NextDouble()));
                     if (!outputLayer.Contains(outLayerId))
                     {
                         outputLayer.Add(outLayerId);
@@ -159,20 +163,17 @@ namespace TankGame
             //Initialize the players
             red.position.x = red.spawnPoint.x;
             red.position.y = red.spawnPoint.y;
-			red.botBrain = new NeuralNetwork(tempEdges, MapBlock.numOfStates * WIDTH_IN_TILES * HEIGHT_IN_TILES + (int)ControlCommand.FINAL_UNUSED, outputLayer);
+			red.botBrain = new NeuralNetwork(tempEdges, Player.NUM_OF_INPUTS + (int)ControlCommand.FINAL_UNUSED, outputLayer);
 
 			blue.position.x = blue.spawnPoint.x;
 			blue.position.y = blue.spawnPoint.y;
-			blue.botBrain = new NeuralNetwork(tempEdges, MapBlock.numOfStates * WIDTH_IN_TILES * HEIGHT_IN_TILES + (int)ControlCommand.FINAL_UNUSED, outputLayer);
+			blue.botBrain = new NeuralNetwork(tempEdges, Player.NUM_OF_INPUTS + (int)ControlCommand.FINAL_UNUSED, outputLayer);
 
             red.calcDegreeAndDistanceToTarget(blue.position.x, blue.position.y);
             blue.calcDegreeAndDistanceToTarget(red.position.x, red.position.y);
 
-            List<double> redInput = new List<double> { red.distanceToTarget, red.degreeToTarget };
-            List<double> blueInput = new List<double> { blue.distanceToTarget, blue.degreeToTarget };
-
-            red.botBrain.feedForward(redInput);
-            blue.botBrain.feedForward(blueInput);
+            redInput = new List<double> { red.distanceToTarget, red.degreeToTarget };
+            blueInput = new List<double> { blue.distanceToTarget, blue.degreeToTarget };
         }
 
 		/// <summary>
@@ -360,6 +361,54 @@ namespace TankGame
 			}
 		}
 
+        private void DoAIStuff(Player player, List<double>input)
+        {
+            Dictionary<int, double> outputDict = player.botBrain.feedForward(input);
+            double valueOfHighest = -1;
+            int ControlCommandEquivalent = -1;
+            for (int nodeID = Player.NUM_OF_INPUTS + 1; nodeID < Player.NUM_OF_INPUTS + (int)ControlCommand.FINAL_UNUSED; ++nodeID)
+            {
+                if (outputDict[nodeID] > valueOfHighest)
+                {
+                    valueOfHighest = outputDict[nodeID];
+                    ControlCommandEquivalent = nodeID - (Player.NUM_OF_INPUTS + 1);
+                }
+            }
+
+            switch (ControlCommandEquivalent)
+            {
+                case (int)ControlCommand.NONE:
+                    break;
+                case (int)ControlCommand.Up:
+                    player.keyController(Keys.Up);
+                    break;
+                case (int)ControlCommand.Right:
+                    player.keyController(Keys.Right);
+                    break;
+                case (int)ControlCommand.Down:
+                    player.keyController(Keys.Down);
+                    break;
+                case (int)ControlCommand.Left:
+                    player.keyController(Keys.Left);
+                    break;
+                case (int)ControlCommand.W:
+                    player.keyController(Keys.W);
+                    break;
+                case (int)ControlCommand.D:
+                    player.keyController(Keys.D);
+                    break;
+                case (int)ControlCommand.S:
+                    player.keyController(Keys.S);
+                    break;
+                case (int)ControlCommand.A:
+                    player.keyController(Keys.A);
+                    break;
+                case (int)ControlCommand.Space:
+                    player.keyController(Keys.Space);
+                    break;
+            }
+        }
+
         /// <summary>
         /// Developer:		Anthony Harris
         /// Function Name:	Update
@@ -381,6 +430,10 @@ namespace TankGame
 			Player.yScale = splitContainer1.Panel2.Height / HEIGHT_IN_TILES;
 			Missile.xScale = Player.xScale;
 			Missile.yScale = Player.yScale;
+
+            //Do AI stuff
+            DoAIStuff(red, redInput);
+            DoAIStuff(blue, blueInput);
 
 			//Update players and missiles
 			red.updatePlayer(mapBlocks);
