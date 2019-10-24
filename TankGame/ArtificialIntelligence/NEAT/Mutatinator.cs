@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TankGame.ArtificialIntelligence.NEAT
+namespace TankGame
 {
-    static class Mutatinator
+    public static class Mutatinator
     {
         enum TypesOfMutation
         {

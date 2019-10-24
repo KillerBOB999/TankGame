@@ -59,20 +59,30 @@ namespace TankGame
 
 		//START GLOBALS----------------------------------------------------------------------------------
 
-		DateTime startTime = DateTime.Now;
-		DateTime currentTime = DateTime.Now;
+		WorldState worldState;
+		int generationCount = 1;
+		const int timeLimitInSeconds = 1;
+		int numRedWins = 0;
+		int numBlueWins = 0;
+
+		bool firstTime = true;
+
+		DateTime startTime = new DateTime();
+		DateTime currentTime = new DateTime();
 		TimeSpan elapsed = new TimeSpan();
+		double baseWinBonus = Player.baseFitness;
+		double currentWinBonus;
 
 		//Who's playing?
-		const bool isRedHumanPlaying = true;
+		const bool isRedHumanPlaying = false;
 		const bool isBlueHumanPlaying = false;
 
         //Pull in external resources and initialize core entity objects
         string terrainMapN = File.ReadAllText("Resources/Maps/TerrainMaps/TerrainMap2.JSON");
-		Player red = new Player("Resources/images/Red_TankBody.png", "Resources/images/Turret.png", 
-								0, 0, isRedHumanPlaying, true);
-		Player blue = new Player("Resources/images/Blue_TankBody.png", "Resources/images/Turret.png", 
-								0, 0, isBlueHumanPlaying, false);
+		Player red = new Player("Resources/images/Red_TankBody.png", "Resources/images/Turret.png",
+								Orientation.North, Orientation.North, isRedHumanPlaying, true);
+		Player blue = new Player("Resources/images/Blue_TankBody.png", "Resources/images/Turret.png",
+								Orientation.North, Orientation.North, isBlueHumanPlaying, false);
 
 		//Define useful variables
 		const int WIDTH_IN_TILES = 25;		//Number of tiles in the width of the world
@@ -81,8 +91,6 @@ namespace TankGame
 		int yMapBlock;						//Used as iterator in mapBlocks[]
 		MapBlock[,] mapBlocks = new MapBlock[WIDTH_IN_TILES, HEIGHT_IN_TILES];//The map in gametiles
 		Position offset = new Position();   //Position offset in pixels for use when drawing the bitmap
-        List<double> redInput = new List<double>();
-        List<double> blueInput = new List<double>();
 
 
         //END GLOBALS------------------------------------------------------------------------------------
@@ -101,9 +109,12 @@ namespace TankGame
         /// </summary>
         private void InitializeData()
 		{
-			List<Edge> tempEdges = new List<Edge>();
-			List<int> outputLayer = new List<int>();
-			Random rand = new Random();
+			worldState = WorldState.GameInProgress;
+
+			startTime = DateTime.Now;
+			currentTime = startTime;
+			currentWinBonus = Player.baseFitness;
+
 			xMapBlock = 0;
 			yMapBlock = 0;
 			for (int index = 0; index < terrainMapN.Length; ++index)
@@ -118,63 +129,63 @@ namespace TankGame
 				}
 			}
 
-            //Create the edges of the neural networks to be used
+			if (firstTime)
+			{
+				List<Edge> tempEdges = new List<Edge>();
+				List<int> outputLayer = new List<int>();
+				//Create the edges of the neural networks to be used
 
-            int inLayerId = 1;
-            int outLayerId;
+				int inLayerId = 1;
+				int outLayerId;
 
-            //The following is for when you use the entire map as an input.
+				//The following is for when you use the entire map as an input.
 
-            //for (int x = 0; x < WIDTH_IN_TILES; ++x)
-            //{
-            //	for (int y = 0; y < HEIGHT_IN_TILES; ++y)
-            //	{
-            //		for (int z = 0; z < MapBlock.numOfStates; ++z)
-            //		{
-            //			inputLayer.Add(inLayerId);
-            //          for (int command = (int)ControlCommand.NONE; command < (int)ControlCommand.FINAL_UNUSED; ++command)
-            //			{
-            //              outLayerId = WIDTH_IN_TILES * HEIGHT_IN_TILES * MapBlock.numOfStates + command + 1;
-            //				tempEdges.Add(new Edge(inLayerId, outLayerId, 1, 0));
-            //			}
-            //          inLayerId++;
-            //      }
-            //	}
-            //}
+				//for (int x = 0; x < WIDTH_IN_TILES; ++x)
+				//{
+				//	for (int y = 0; y < HEIGHT_IN_TILES; ++y)
+				//	{
+				//		for (int z = 0; z < MapBlock.numOfStates; ++z)
+				//		{
+				//			inputLayer.Add(inLayerId);
+				//          for (int command = (int)ControlCommand.NONE; command < (int)ControlCommand.FINAL_UNUSED; ++command)
+				//			{
+				//              outLayerId = WIDTH_IN_TILES * HEIGHT_IN_TILES * MapBlock.numOfStates + command + 1;
+				//				tempEdges.Add(new Edge(inLayerId, outLayerId, 1, 0));
+				//			}
+				//          inLayerId++;
+				//      }
+				//	}
+				//}
 
-            //The following is for when you use the tankDegreeToTarget and turretDegreeToTarget
-            //distanceToTarget attributes of player as inputs
+				//The following is for when you use the tankDegreeToTarget and turretDegreeToTarget
+				//distanceToTarget attributes of player as inputs
 
-            Random rng = new Random();
-            for (int i = 0; i < Player.NUM_OF_INPUTS; ++i)
-            {
-                for (int command = (int)ControlCommand.NONE; command < (int)ControlCommand.FINAL_UNUSED; ++command)
-                {
-                    outLayerId = Player.NUM_OF_INPUTS + command + 1;
-                    tempEdges.Add(new Edge(inLayerId, outLayerId, rng.NextDouble(),rng.NextDouble()));
-                    if (!outputLayer.Contains(outLayerId))
-                    {
-                        outputLayer.Add(outLayerId);
-                    }
-                }
-                inLayerId++;
-            }
+				Random rng = new Random();
+				for (int i = 0; i < Player.NUM_OF_INPUTS; ++i)
+				{
+					for (int command = (int)ControlCommand.NONE; command < (int)ControlCommand.FINAL_UNUSED; ++command)
+					{
+						outLayerId = Player.NUM_OF_INPUTS + command + 1;
+						tempEdges.Add(new Edge(inLayerId, outLayerId, rng.NextDouble(), rng.NextDouble()));
+						if (!outputLayer.Contains(outLayerId))
+						{
+							outputLayer.Add(outLayerId);
+						}
+					}
+					inLayerId++;
+				}
 
-            //Initialize the players
-            red.position.x = red.spawnPoint.x;
-            red.position.y = red.spawnPoint.y;
-			red.botBrain = new NeuralNetwork(tempEdges, Player.NUM_OF_INPUTS + (int)ControlCommand.FINAL_UNUSED, outputLayer);
+				red.botBrain = new NeuralNetwork(tempEdges, Player.NUM_OF_INPUTS + (int)ControlCommand.FINAL_UNUSED, outputLayer);
+				blue.botBrain = new NeuralNetwork(tempEdges, Player.NUM_OF_INPUTS + (int)ControlCommand.FINAL_UNUSED, outputLayer);
+			}
 
-			blue.position.x = blue.spawnPoint.x;
-			blue.position.y = blue.spawnPoint.y;
-			blue.botBrain = new NeuralNetwork(tempEdges, Player.NUM_OF_INPUTS + (int)ControlCommand.FINAL_UNUSED, outputLayer);
+			//Initialize the players
+			red.reset();
+			blue.reset();
 
-            red.calcDegreeAndDistanceToTarget(blue.position.x, blue.position.y);
-            blue.calcDegreeAndDistanceToTarget(red.position.x, red.position.y);
-
-            redInput = new List<double> { red.distanceToTarget, red.degreeToTarget };
-            blueInput = new List<double> { blue.distanceToTarget, blue.degreeToTarget };
-        }
+			red.calcDegreeAndDistanceToTarget(blue.position.x, blue.position.y);
+			blue.calcDegreeAndDistanceToTarget(red.position.x, red.position.y);
+		}
 
 		/// <summary>
 		/// Developer:		Anthony Harris
@@ -340,11 +351,15 @@ namespace TankGame
 					mapBlocks[xMapBlock, yMapBlock] = new MapBlock(false, true, false, true, false, xMapBlock, yMapBlock, Color.Red, Player.xScale, Player.yScale);
 					red.spawnPoint.x = xMapBlock;
 					red.spawnPoint.y = yMapBlock;
+					mapBlocks[xMapBlock, yMapBlock].isOccupied = true;
+					mapBlocks[xMapBlock, yMapBlock].isOccRed = true;
 					break;
 				case 9:         //Blue Player Spawn
 					mapBlocks[xMapBlock, yMapBlock] = new MapBlock(false, true, false, false, true, xMapBlock, yMapBlock, Color.Blue, Player.xScale, Player.yScale);
 					blue.spawnPoint.x = xMapBlock;
 					blue.spawnPoint.y = yMapBlock;
+					mapBlocks[xMapBlock, yMapBlock].isOccupied = true;
+					mapBlocks[xMapBlock, yMapBlock].isOccBlue = true;
 					break;
 			}
 			mapBlocks[xMapBlock, yMapBlock].updateStates();
@@ -361,9 +376,9 @@ namespace TankGame
 			}
 		}
 
-        private void DoAIStuff(Player player, List<double>input)
+        private void DoAIStuff(Player player)
         {
-            Dictionary<int, double> outputDict = player.botBrain.feedForward(input);
+            Dictionary<int, double> outputDict = player.botBrain.feedForward(player.botInput);
             double valueOfHighest = -1;
             int ControlCommandEquivalent = -1;
             for (int nodeID = Player.NUM_OF_INPUTS + 1; nodeID < Player.NUM_OF_INPUTS + (int)ControlCommand.FINAL_UNUSED; ++nodeID)
@@ -371,7 +386,7 @@ namespace TankGame
                 if (outputDict[nodeID] > valueOfHighest)
                 {
                     valueOfHighest = outputDict[nodeID];
-                    ControlCommandEquivalent = nodeID - (Player.NUM_OF_INPUTS + 1);
+                    ControlCommandEquivalent = nodeID - (Player.NUM_OF_INPUTS - 1);
                 }
             }
 
@@ -409,6 +424,31 @@ namespace TankGame
             }
         }
 
+		private void updateInformationDisplay()
+		{
+			elapsedTimeDisplay.Text = elapsed.ToString();
+			currentPotDisplay.Text = currentWinBonus.ToString();
+			redCurrentFitnessDisplay.Text = red.fitness.ToString();
+			redNumberOfMovesDisplay.Text = red.numOfMoves.ToString();
+			redMissilesFiredDisplay.Text = red.numOfMissilesFired.ToString();
+			blueCurrentFitnessDisplay.Text = blue.fitness.ToString();
+			blueNumberOfMovesDisplay.Text = blue.numOfMoves.ToString();
+			blueMissilesFiredDisplay.Text = blue.numOfMissilesFired.ToString();
+			generationCountDisplay.Text = generationCount.ToString();
+			redNumberOfWinsDisplay.Text = numRedWins.ToString();
+			blueNumberOfWinsDisplay.Text = numBlueWins.ToString();
+		}
+
+		private void handleGameover()
+		{
+			Mutatinator.mutate(red.botBrain);
+			Mutatinator.mutate(blue.botBrain);
+
+
+			++generationCount;
+			InitializeData();
+		}
+
         /// <summary>
         /// Developer:		Anthony Harris
         /// Function Name:	Update
@@ -421,33 +461,69 @@ namespace TankGame
         /// </summary>
         private void Update()
 		{
-			currentTime = DateTime.Now;
-			elapsed = currentTime - startTime;
-
-			//Determine and assign the Pixel:GameTile ratio and assign it to
-			//the static Player and Missile class variables xScale and yScale.
-			Player.xScale = splitContainer1.Panel2.Width / WIDTH_IN_TILES;
-			Player.yScale = splitContainer1.Panel2.Height / HEIGHT_IN_TILES;
-			Missile.xScale = Player.xScale;
-			Missile.yScale = Player.yScale;
-
-            //Do AI stuff
-            DoAIStuff(red, redInput);
-            DoAIStuff(blue, blueInput);
-
-			//Update players and missiles
-			red.updatePlayer(mapBlocks);
-			blue.updatePlayer(mapBlocks);
-			for (int i = 0; i < red.missiles.Length; ++i)
+			if (elapsed.TotalSeconds >= timeLimitInSeconds)
 			{
-				red.missiles[i].updateMissile(mapBlocks);
+				worldState = WorldState.GameOverTimeOut;
+				elapsed = DateTime.Now - DateTime.Now;
 			}
-			for (int i = 0; i < red.missiles.Length; ++i)
+			switch (worldState)
 			{
-				blue.missiles[i].updateMissile(mapBlocks);
+				case WorldState.GameInProgress:
+					currentTime = DateTime.Now;
+					elapsed = currentTime - startTime;
+					currentWinBonus = baseWinBonus * (1 / (1 + elapsed.TotalSeconds));
+					red.calcFitness(elapsed);
+					blue.calcFitness(elapsed);
+
+					//Determine and assign the Pixel:GameTile ratio and assign it to
+					//the static Player and Missile class variables xScale and yScale.
+					Player.xScale = splitContainer1.Panel2.Width / WIDTH_IN_TILES;
+					Player.yScale = splitContainer1.Panel2.Height / HEIGHT_IN_TILES;
+					Missile.xScale = Player.xScale;
+					Missile.yScale = Player.yScale;
+
+					//Do AI stuff
+					red.calcDegreeAndDistanceToTarget(blue.position.x, blue.position.y);
+					blue.calcDegreeAndDistanceToTarget(red.position.x, red.position.y);
+					if (!isRedHumanPlaying)
+					{
+						DoAIStuff(red);
+					}
+					if (!isBlueHumanPlaying)
+					{
+						DoAIStuff(blue);
+					}
+
+					//Update players and missiles
+					red.updatePlayer(mapBlocks);
+					blue.updatePlayer(mapBlocks);
+					for (int i = 0; i < red.missiles.Length; ++i)
+					{
+						red.missiles[i].updateMissile(mapBlocks, ref worldState);
+					}
+					for (int i = 0; i < red.missiles.Length; ++i)
+					{
+						blue.missiles[i].updateMissile(mapBlocks, ref worldState);
+					}
+					red.calcDegreeAndDistanceToTarget(blue.position.x, blue.position.y);
+					blue.calcDegreeAndDistanceToTarget(red.position.x, red.position.y);
+					break;
+				case WorldState.GameOverBlueWin:
+					blue.winBonus = currentWinBonus;
+					red.winBonus = -currentWinBonus;
+					++numBlueWins;
+					break;
+				case WorldState.GameOverRedWin:
+					red.winBonus = currentWinBonus;
+					blue.winBonus = -currentWinBonus;
+					++numRedWins;
+					break;
 			}
-            red.calcDegreeAndDistanceToTarget(blue.position.x, blue.position.y);
-            blue.calcDegreeAndDistanceToTarget(red.position.x, red.position.y);
+			if(worldState != WorldState.GameInProgress)
+			{
+				handleGameover();
+			}
+			updateInformationDisplay();
 		}
 
         /// <summary>

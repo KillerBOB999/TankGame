@@ -114,5 +114,10 @@ namespace TankGame
                 }
             }
         }
+
+		public static double sigmoid(double numeratorfactor, double exponentFactor, double inputValue)
+		{
+			return numeratorfactor / (1 + Math.Pow(Math.E, -exponentFactor * inputValue));
+		}
 	}
 }

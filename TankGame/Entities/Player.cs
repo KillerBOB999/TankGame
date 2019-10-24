@@ -11,6 +11,14 @@ namespace TankGame
 	public class Player
 	{
 		public NeuralNetwork botBrain;
+		public List<double> botInput = new List<double>() { 0, 0 };
+		public static double baseFitness = 1000;
+		public double fitness = baseFitness;
+		public double winBonus = 0;
+		public int numOfMoves = 0;
+		public int numOfMissilesFired = 0;
+
+
 		public bool isHuman;
 		public bool isRedPlayer;
 		public bool isAlive = true;
@@ -52,6 +60,17 @@ namespace TankGame
 			}
 		}
 
+		public void reset()
+		{
+			position.x = spawnPoint.x;
+			position.y = spawnPoint.y;
+			velocity.x = 0;
+			velocity.y = 0;
+			tankOrientation = Orientation.North;
+			turretOrientation = Orientation.North;
+			numOfMissilesFired = 0;
+			numOfMoves = 0;
+		}
 		public Bitmap findOrientedImage(Bitmap baseImage, Orientation orientation)
 		{
 			switch (orientation)
@@ -91,9 +110,26 @@ namespace TankGame
             }
             else
             {
-                degreeToTarget = Math.Atan(deltaY / deltaX);
+				switch (turretOrientation)
+				{
+					case Orientation.North:
+						deltaY--;
+						break;
+					case Orientation.East:
+						deltaX++;
+						break;
+					case Orientation.South:
+						deltaY++;
+						break;
+					case Orientation.West:
+						deltaX--;
+						break;
+				}
+				degreeToTarget = Math.Atan((double)deltaY / (double)deltaX);
             }
-
+			botInput[0] = distanceToTarget;
+			botInput[1] = degreeToTarget;
+			standardizeValues();
         }
 
 		public void keyController(Keys pressedKey)
@@ -140,22 +176,27 @@ namespace TankGame
 					velocity.x = 0;
 					velocity.y = -1;
 					tankOrientation = Orientation.North;
-					return;
+					break;
 				case ControlCommand.Right:
 					velocity.x = 1;
 					velocity.y = 0;
 					tankOrientation = Orientation.East;
-					return;
+					break;
 				case ControlCommand.Down:
 					velocity.x = 0;
 					velocity.y = 1;
 					tankOrientation = Orientation.South;
-					return;
+					break;
 				case ControlCommand.Left:
 					velocity.x = -1;
 					velocity.y = 0;
 					tankOrientation = Orientation.West;
-					return;
+					break;
+			}
+			if (tankCommand != ControlCommand.NONE)
+			{
+				++numOfMoves;
+				return;
 			}
 
 			switch (turretCommand)
@@ -166,34 +207,39 @@ namespace TankGame
 					velocity.x = 0;
 					velocity.y = 0;
 					turretOrientation = Orientation.North;
-					return;
+					break;
 				case ControlCommand.Right:
 					velocity.x = 0;
 					velocity.y = 0;
 					turretOrientation = Orientation.East;
-					return;
+					break;
 				case ControlCommand.Down:
 					velocity.x = 0;
 					velocity.y = 0;
 					turretOrientation = Orientation.South;
-					return;
+					break;
 				case ControlCommand.Left:
 					velocity.x = 0;
 					velocity.y = 0;
 					turretOrientation = Orientation.West;
-					return;
+					break;
 				case ControlCommand.Space:
 					if (missiles[0].isActive && !missiles[1].isActive)
 					{
 						missiles[1].fireMissile(turretOrientation, position);
+						++numOfMissilesFired;
 					}
 					else if(!missiles[0].isActive)
 					{
 						missiles[0].fireMissile(turretOrientation, position);
+						++numOfMissilesFired;
 					}
 					return;
 			}
-
+			if (turretCommand != ControlCommand.NONE)
+			{
+				++numOfMoves;
+			}
 			return;
 		}
 
@@ -250,6 +296,19 @@ namespace TankGame
 			}
 			turretScaled = new Bitmap(turretBase, new Size(xScale, yScale));
 			return turretScaled;
+		}
+
+		public void calcFitness(TimeSpan elapsed)
+		{
+			fitness = winBonus + (baseFitness / (numOfMoves + numOfMissilesFired + elapsed.TotalSeconds));
+		}
+
+		public void standardizeValues()
+		{
+			for (int i = 0; i < botInput.Count; ++i)
+			{
+				botInput[i] = NeuralNetwork.sigmoid(2, 2, botInput[i]);
+			}
 		}
 	}
 }

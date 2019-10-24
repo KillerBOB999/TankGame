@@ -76,7 +76,7 @@ namespace TankGame
 			position.y = tankPosition.y;
 		}
 
-		public void updateMissile(MapBlock[,] map)
+		public void updateMissile(MapBlock[,] map, ref WorldState worldState)
 		{
 			if (isActive)
 			{
@@ -92,6 +92,14 @@ namespace TankGame
 					{
 						isActive = false;
 						isContact = true;
+						if(map[position.x, position.y].isOccBlue)
+						{
+							worldState = WorldState.GameOverRedWin;
+						}
+						else if (map[position.x, position.y].isOccRed)
+						{
+							worldState = WorldState.GameOverBlueWin;
+						}
 					}
 				}
 				else
