@@ -59,11 +59,14 @@ namespace TankGame
 
 		//START GLOBALS----------------------------------------------------------------------------------
 
-		WorldState worldState;
+		public WorldState worldState;
 		int generationCount = 1;
-		const int timeLimitInSeconds = 1;
+        double baseTimeLimitInSeconds = 1;
+		double timeLimitInSeconds = 1;
 		int numRedWins = 0;
 		int numBlueWins = 0;
+        double peakRed = 0;
+        double peakBlue = 0;
 
 		bool firstTime = true;
 
@@ -87,6 +90,9 @@ namespace TankGame
 		//Define useful variables
 		const int WIDTH_IN_TILES = 25;		//Number of tiles in the width of the world
 		const int HEIGHT_IN_TILES = 25;		//Number of tiles in the height of the world
+        static double MAX_DISTANCE = Math.Pow((double)WIDTH_IN_TILES + (double)HEIGHT_IN_TILES, 0.5);
+        static double MAX_ANGLE = Math.PI;
+        List<double> MAX_INPUT_VALUES = new List<double>() { MAX_DISTANCE, MAX_ANGLE, MAX_DISTANCE, MAX_ANGLE };
 		int xMapBlock;						//Used as iterator in mapBlocks[]
 		int yMapBlock;						//Used as iterator in mapBlocks[]
 		MapBlock[,] mapBlocks = new MapBlock[WIDTH_IN_TILES, HEIGHT_IN_TILES];//The map in gametiles
@@ -131,11 +137,11 @@ namespace TankGame
 
 			if (firstTime)
 			{
-				List<Edge> tempEdges = new List<Edge>();
+				List<List<Edge>> tempEdges = new List<List<Edge>>() { new List<Edge>(), new List<Edge>() };
 				List<int> outputLayer = new List<int>();
-				//Create the edges of the neural networks to be used
+                //Create the edges of the neural networks to be used
 
-				int inLayerId = 1;
+                int inLayerId;
 				int outLayerId;
 
 				//The following is for when you use the entire map as an input.
@@ -161,30 +167,40 @@ namespace TankGame
 				//distanceToTarget attributes of player as inputs
 
 				Random rng = new Random();
-				for (int i = 0; i < Player.NUM_OF_INPUTS; ++i)
-				{
-					for (int command = (int)ControlCommand.NONE; command < (int)ControlCommand.FINAL_UNUSED; ++command)
-					{
-						outLayerId = Player.NUM_OF_INPUTS + command + 1;
-						tempEdges.Add(new Edge(inLayerId, outLayerId, rng.NextDouble(), rng.NextDouble()));
-						if (!outputLayer.Contains(outLayerId))
-						{
-							outputLayer.Add(outLayerId);
-						}
-					}
-					inLayerId++;
-				}
+                for (int playerCounter = 0; playerCounter < 2; ++playerCounter)
+                {
+                    inLayerId = 1;
+                    for (int i = 0; i < Player.NUM_OF_INPUTS; ++i)
+                    {
+                        for (int command = (int)ControlCommand.NONE; command < (int)ControlCommand.FINAL_UNUSED; ++command)
+                        {
+                            outLayerId = Player.NUM_OF_INPUTS + command + 1;
+                            tempEdges[playerCounter].Add(new Edge(inLayerId, outLayerId, rng.NextDouble(), rng.NextDouble()));
+                            if (!outputLayer.Contains(outLayerId))
+                            {
+                                outputLayer.Add(outLayerId);
+                            }
+                        }
+                        inLayerId++;
+                    }
+                }
 
-				red.botBrain = new NeuralNetwork(tempEdges, Player.NUM_OF_INPUTS + (int)ControlCommand.FINAL_UNUSED, outputLayer);
-				blue.botBrain = new NeuralNetwork(tempEdges, Player.NUM_OF_INPUTS + (int)ControlCommand.FINAL_UNUSED, outputLayer);
+				red.botBrain = new NeuralNetwork(tempEdges[0], Player.NUM_OF_INPUTS + (int)ControlCommand.FINAL_UNUSED, outputLayer);
+				blue.botBrain = new NeuralNetwork(tempEdges[1], Player.NUM_OF_INPUTS + (int)ControlCommand.FINAL_UNUSED, outputLayer);
 			}
 
 			//Initialize the players
-			red.reset();
-			blue.reset();
+			red.reset(MAX_INPUT_VALUES);
+			blue.reset(MAX_INPUT_VALUES);
 
-			red.calcDegreeAndDistanceToTarget(blue.position.x, blue.position.y);
-			blue.calcDegreeAndDistanceToTarget(red.position.x, red.position.y);
+            red.playerController(ControlCommand.NONE, ControlCommand.Right);
+            blue.playerController(ControlCommand.NONE, ControlCommand.Left);
+
+            red.updatePlayer(mapBlocks);
+            blue.updatePlayer(mapBlocks);
+
+			red.calcDegreeAndDistanceToTarget(blue, MAX_INPUT_VALUES);
+			blue.calcDegreeAndDistanceToTarget(red, MAX_INPUT_VALUES);
 		}
 
 		/// <summary>
@@ -437,13 +453,58 @@ namespace TankGame
 			generationCountDisplay.Text = generationCount.ToString();
 			redNumberOfWinsDisplay.Text = numRedWins.ToString();
 			blueNumberOfWinsDisplay.Text = numBlueWins.ToString();
-		}
+            redNumberOfNodesDisplay.Text = red.botBrain.nextID.ToString();
+            blueNumberOfNodesDisplay.Text = blue.botBrain.nextID.ToString();
+            redNumberOfEdgesDisplay.Text = red.botBrain.edges.Count.ToString();
+            blueNumberOfEdgesDisplay.Text = blue.botBrain.edges.Count.ToString();
+        }
 
 		private void handleGameover()
 		{
-			Mutatinator.mutate(red.botBrain);
-			Mutatinator.mutate(blue.botBrain);
+            Random rng = new Random();
+            if(generationCount % 100 == 0)
+            {
+                timeLimitInSeconds += baseTimeLimitInSeconds;
+            }
 
+            red.calcFitness(blue, elapsed);
+            blue.calcFitness(red, elapsed);
+
+            if(red.fitness > peakRed)
+            {
+                peakRed = red.fitness;
+                redPeakFitnessDisplay.Text = peakRed.ToString();
+            }
+            if(blue.fitness > peakBlue)
+            {
+                peakBlue = blue.fitness;
+                bluePeakFitnessDisplay.Text = peakBlue.ToString();
+            }
+
+            if (rng.NextDouble() < 0.5)
+            {
+                NeuralNetwork mama;
+                NeuralNetwork papa;
+                if (red.fitness < blue.fitness)
+                {
+                    mama = new NeuralNetwork(red.botBrain);
+                    papa = new NeuralNetwork(blue.botBrain);
+                    red.botBrain = Mutatinator.cross(mama, papa);
+                }
+                else
+                {
+                    mama = new NeuralNetwork(blue.botBrain);
+                    papa = new NeuralNetwork(red.botBrain);
+                    blue.botBrain = Mutatinator.cross(mama, papa);
+                }
+            }
+            else
+            {
+                Mutatinator.mutate(red.botBrain);
+                Mutatinator.mutate(blue.botBrain);
+            }
+
+            updateInformationDisplay();
 
 			++generationCount;
 			InitializeData();
@@ -466,62 +527,69 @@ namespace TankGame
 				worldState = WorldState.GameOverTimeOut;
 				elapsed = DateTime.Now - DateTime.Now;
 			}
-			switch (worldState)
+			if(worldState == WorldState.GameInProgress)
 			{
-				case WorldState.GameInProgress:
-					currentTime = DateTime.Now;
-					elapsed = currentTime - startTime;
-					currentWinBonus = baseWinBonus * (1 / (1 + elapsed.TotalSeconds));
-					red.calcFitness(elapsed);
-					blue.calcFitness(elapsed);
+				currentTime = DateTime.Now;
+				elapsed = currentTime - startTime;
+				currentWinBonus = baseWinBonus * (1 / (1 + elapsed.TotalSeconds));
+				red.calcFitness(blue, elapsed);
+				blue.calcFitness(red, elapsed);
 
-					//Determine and assign the Pixel:GameTile ratio and assign it to
-					//the static Player and Missile class variables xScale and yScale.
-					Player.xScale = splitContainer1.Panel2.Width / WIDTH_IN_TILES;
-					Player.yScale = splitContainer1.Panel2.Height / HEIGHT_IN_TILES;
-					Missile.xScale = Player.xScale;
-					Missile.yScale = Player.yScale;
+				//Determine and assign the Pixel:GameTile ratio and assign it to
+				//the static Player and Missile class variables xScale and yScale.
+				Player.xScale = splitContainer1.Panel2.Width / WIDTH_IN_TILES;
+				Player.yScale = splitContainer1.Panel2.Height / HEIGHT_IN_TILES;
+				Missile.xScale = Player.xScale;
+				Missile.yScale = Player.yScale;
 
-					//Do AI stuff
-					red.calcDegreeAndDistanceToTarget(blue.position.x, blue.position.y);
-					blue.calcDegreeAndDistanceToTarget(red.position.x, red.position.y);
-					if (!isRedHumanPlaying)
-					{
-						DoAIStuff(red);
-					}
-					if (!isBlueHumanPlaying)
-					{
-						DoAIStuff(blue);
-					}
+				//Do AI stuff
+				red.calcDegreeAndDistanceToTarget(blue, MAX_INPUT_VALUES);
+				blue.calcDegreeAndDistanceToTarget(red, MAX_INPUT_VALUES);
+				if (!isRedHumanPlaying)
+				{
+					DoAIStuff(red);
+				}
+				if (!isBlueHumanPlaying)
+				{
+					DoAIStuff(blue);
+				}
 
-					//Update players and missiles
-					red.updatePlayer(mapBlocks);
-					blue.updatePlayer(mapBlocks);
-					for (int i = 0; i < red.missiles.Length; ++i)
-					{
-						red.missiles[i].updateMissile(mapBlocks, ref worldState);
-					}
-					for (int i = 0; i < red.missiles.Length; ++i)
-					{
-						blue.missiles[i].updateMissile(mapBlocks, ref worldState);
-					}
-					red.calcDegreeAndDistanceToTarget(blue.position.x, blue.position.y);
-					blue.calcDegreeAndDistanceToTarget(red.position.x, red.position.y);
-					break;
-				case WorldState.GameOverBlueWin:
-					blue.winBonus = currentWinBonus;
-					red.winBonus = -currentWinBonus;
-					++numBlueWins;
-					break;
-				case WorldState.GameOverRedWin:
-					red.winBonus = currentWinBonus;
-					blue.winBonus = -currentWinBonus;
-					++numRedWins;
-					break;
-			}
-			if(worldState != WorldState.GameInProgress)
-			{
-				handleGameover();
+				//Update players and missiles
+				red.updatePlayer(mapBlocks);
+				blue.updatePlayer(mapBlocks);
+				for (int i = 0; i < red.missiles.Length; ++i)
+				{
+                    if (red.missiles[i].isActive)
+                    {
+                        red.missiles[i].updateMissile(mapBlocks, ref worldState);
+                    }
+				}
+				for (int i = 0; i < blue.missiles.Length; ++i)
+				{
+                    if (blue.missiles[i].isActive)
+                    {
+                        blue.missiles[i].updateMissile(mapBlocks, ref worldState);
+                    }
+				}
+				red.calcDegreeAndDistanceToTarget(blue, MAX_INPUT_VALUES);
+				blue.calcDegreeAndDistanceToTarget(red, MAX_INPUT_VALUES);
+		}
+			else
+            {
+                switch (worldState)
+                {
+                    case WorldState.GameOverBlueWin:
+                        blue.winBonus = currentWinBonus;
+                        red.winBonus = -currentWinBonus;
+                        ++numBlueWins;
+                        break;
+                    case WorldState.GameOverRedWin:
+                        red.winBonus = currentWinBonus;
+                        blue.winBonus = -currentWinBonus;
+                        ++numRedWins;
+                        break;
+                }
+                handleGameover();
 			}
 			updateInformationDisplay();
 		}

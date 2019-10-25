@@ -39,15 +39,15 @@ namespace TankGame
             updateEdgeDict(edges);
         }
 
-        public Dictionary<int, double> feedForward(List<double>inputActivationValues)
+        public Dictionary<int, double> feedForward(List<double>inputValues)
         {
-            sizeOfInputLayer = inputActivationValues.Count;
+            sizeOfInputLayer = inputValues.Count;
             int nodeID = 1;
             Dictionary<int, double> activationValues = new Dictionary<int, double>();
             Dictionary<int, double> currentProgress = new Dictionary<int, double>();
             Dictionary<int, double> outputLayer = new Dictionary<int, double>();
 
-            foreach (var inputValue in inputActivationValues)
+            foreach (var inputValue in inputValues)
             {
                 activationValues.Add(nodeID, inputValue);
                 ++nodeID;

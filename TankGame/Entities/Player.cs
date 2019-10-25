@@ -11,13 +11,12 @@ namespace TankGame
 	public class Player
 	{
 		public NeuralNetwork botBrain;
-		public List<double> botInput = new List<double>() { 0, 0 };
+		public List<double> botInput = new List<double>() { 0, 0, 0, 0 };
 		public static double baseFitness = 1000;
 		public double fitness = baseFitness;
 		public double winBonus = 0;
 		public int numOfMoves = 0;
 		public int numOfMissilesFired = 0;
-
 
 		public bool isHuman;
 		public bool isRedPlayer;
@@ -38,9 +37,12 @@ namespace TankGame
 		public Missile[] missiles = { new Missile(), new Missile() };
 
         //Temporary inputs to simple net
-        public static int NUM_OF_INPUTS = 2;
-        public double degreeToTarget;
+        public static int NUM_OF_INPUTS = 4;
         public double distanceToTarget;
+        public double degreeToTarget;
+        public double distanceToNearestMissile;
+        public double degreeToNearestMissile;
+        
 
 		//Constructor
 		public Player(string tankBody, string tankTurret, Orientation bodyOrientation, Orientation gunOrientation, bool isHum, bool isRed)
@@ -60,7 +62,7 @@ namespace TankGame
 			}
 		}
 
-		public void reset()
+		public void reset(List<double> maxes)
 		{
 			position.x = spawnPoint.x;
 			position.y = spawnPoint.y;
@@ -70,6 +72,9 @@ namespace TankGame
 			turretOrientation = Orientation.North;
 			numOfMissilesFired = 0;
 			numOfMoves = 0;
+            winBonus = 0;
+            distanceToNearestMissile = maxes[2];
+            degreeToNearestMissile = maxes[3];
 		}
 		public Bitmap findOrientedImage(Bitmap baseImage, Orientation orientation)
 		{
@@ -91,47 +96,97 @@ namespace TankGame
 			}
 		}
 
-        public void calcDegreeAndDistanceToTarget(int targetX, int targetY)
+        public void calcDegreeAndDistanceToTarget(Player target, List<Double>inputMaxes)
         {
-            int deltaX = position.x - targetX;
-            int deltaY = position.y - targetY;
+            bool isTank = true;
+            bool isActiveMissile = false;
+            int nearestMissileID = -1;
+            int deltaX;
+            int deltaY;
+            
+            deltaX = position.x - target.position.x;
+            deltaY = position.y - target.position.y;
 
-            distanceToTarget = Math.Sqrt(Math.Pow(deltaX, 2) + Math.Pow(deltaY, 2));
+            distanceToTarget = calcDistance(deltaX, deltaY);
+            degreeToTarget = calcDegree(deltaX, deltaY, isTank, isActiveMissile);
+            isTank = false;
+            
+            for(int i = 0; i < target.missiles.Length; ++i)
+            {
+                if (target.missiles[i].isActive)
+                {
+                    isActiveMissile = true;
+                    nearestMissileID = i;
+                    deltaX = position.x - target.missiles[i].position.x;
+                    deltaY = position.y - target.missiles[i].position.y;
+                    double tempDistance = calcDistance(deltaX, deltaY);
+                    if(tempDistance < distanceToNearestMissile)
+                    {
+                        distanceToNearestMissile = tempDistance;
+                    }
+                }
+            }
+            deltaX = 0;
+            deltaY = 0;
+            if (isActiveMissile)
+            {
+                deltaX = position.x - target.missiles[nearestMissileID].position.x;
+                deltaY = position.y - target.missiles[nearestMissileID].position.y;
+            }
+            degreeToNearestMissile = calcDegree(deltaX, deltaY, isTank, isActiveMissile);
+            botInput[0] = distanceToTarget;
+			botInput[1] = degreeToTarget;
+            botInput[2] = distanceToNearestMissile;
+            botInput[3] = degreeToNearestMissile;
+			standardizeValues(inputMaxes);
+        }
+
+        public double calcDistance(int deltaX, int deltaY)
+        {
+            return Math.Sqrt(Math.Pow(deltaX, 2) + Math.Pow(deltaY, 2));
+        }
+
+        public double calcDegree(int deltaX, int deltaY, bool isTank, bool isMissile)
+        {
+            if (deltaX == 0 && deltaY == 0)
+            {
+                return -2 * Math.PI;
+            }
             if (deltaX == 0)
             {
                 if (deltaY > 0)
                 {
-                    degreeToTarget = Math.PI;
+                    return Math.PI;
                 }
                 else
                 {
-                    degreeToTarget = 3 * Math.PI;
+                    return -Math.PI;
                 }
             }
             else
             {
-				switch (turretOrientation)
-				{
-					case Orientation.North:
-						deltaY--;
-						break;
-					case Orientation.East:
-						deltaX++;
-						break;
-					case Orientation.South:
-						deltaY++;
-						break;
-					case Orientation.West:
-						deltaX--;
-						break;
-				}
-				degreeToTarget = Math.Atan((double)deltaY / (double)deltaX);
+                if (isTank && !isMissile)
+                {
+                    switch (turretOrientation)
+                    {
+                        case Orientation.North:
+                            deltaY--;
+                            break;
+                        case Orientation.East:
+                            deltaX++;
+                            break;
+                        case Orientation.South:
+                            deltaY++;
+                            break;
+                        case Orientation.West:
+                            deltaX--;
+                            break;
+                    }
+                }
+                return Math.Atan((double)deltaY / (double)deltaX);
             }
-			botInput[0] = distanceToTarget;
-			botInput[1] = degreeToTarget;
-			standardizeValues();
         }
-
+      
 		public void keyController(Keys pressedKey)
 		{
 			switch (pressedKey)
@@ -298,17 +353,28 @@ namespace TankGame
 			return turretScaled;
 		}
 
-		public void calcFitness(TimeSpan elapsed)
+		public void calcFitness(Player target, TimeSpan elapsed)
 		{
-			fitness = winBonus + (baseFitness / (numOfMoves + numOfMissilesFired + elapsed.TotalSeconds));
-		}
+            if (target.distanceToNearestMissile != 0)
+            {
+                fitness = winBonus + (100 / target.distanceToNearestMissile) + (baseFitness / (numOfMoves + numOfMissilesFired + elapsed.TotalSeconds));
+            }
+            else
+            {
+                fitness = winBonus + (baseFitness / (numOfMoves + numOfMissilesFired + elapsed.TotalSeconds));
+            }
+        }
 
-		public void standardizeValues()
+        public void standardizeValues(List<double>inputMaxes)
 		{
-			for (int i = 0; i < botInput.Count; ++i)
-			{
-				botInput[i] = NeuralNetwork.sigmoid(2, 2, botInput[i]);
-			}
+            for (int i = 0; i < inputMaxes.Count; ++i)
+            {
+                botInput[i] = botInput[i] / inputMaxes[i];
+            }
+			//for (int i = 0; i < botInput.Count; ++i)
+			//{
+			//	botInput[i] = NeuralNetwork.sigmoid(2, 2, botInput[i]);
+			//}
 		}
 	}
 }

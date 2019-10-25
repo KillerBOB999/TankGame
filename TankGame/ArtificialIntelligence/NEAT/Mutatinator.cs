@@ -15,14 +15,14 @@ namespace TankGame
         static Random rng = new Random();
         public static void mutate(NeuralNetwork neuralNetwork)
         {
-            TypesOfMutation mutationChoice = (TypesOfMutation)rng.Next((int)TypesOfMutation.FIRST_UNUSED + 1, (int)TypesOfMutation.LAST_UNUSED - 1);
+            TypesOfMutation mutationChoice = (TypesOfMutation)rng.Next((int)TypesOfMutation.FIRST_UNUSED, (int)TypesOfMutation.LAST_UNUSED);
             switch (mutationChoice)
             {
                 case TypesOfMutation.AddNewNode:
                     addNode(neuralNetwork);
                     break;
                 case TypesOfMutation.AddNewEdge:
-                    int attemptedInputNode = rng.Next(1, neuralNetwork.nextID - 1);
+                    int attemptedInputNode = rng.Next(1, neuralNetwork.nextID);
                     int attemptedOutputNode = rng.Next(NeuralNetwork.sizeOfInputLayer + 1, neuralNetwork.nextID - 1);
 
                     if(canAddEdge(neuralNetwork, attemptedInputNode, attemptedOutputNode))
@@ -117,7 +117,7 @@ namespace TankGame
             }
         }
 
-        private static NeuralNetwork cross(NeuralNetwork mama, NeuralNetwork papa)
+        public static NeuralNetwork cross(NeuralNetwork mama, NeuralNetwork papa)
         {
             double papaContribution = 0.6;
             double mamaContribution = 0.4;
