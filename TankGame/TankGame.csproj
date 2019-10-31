@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ArtificialIntelligence\NEAT\Mutatinator.cs" />
+    <Compile Include="Game.cs" />
     <Compile Include="World\Color.cs" />
     <Compile Include="Entities\Traits\ControlCommand.cs" />
     <Compile Include="ArtificialIntelligence\Edge.cs" />

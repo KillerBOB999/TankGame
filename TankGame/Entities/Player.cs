@@ -11,6 +11,7 @@ namespace TankGame
 	public class Player
 	{
 		public NeuralNetwork botBrain;
+		public int botBrainID;
 		public List<double> botInput = new List<double>() { 0, 0, 0, 0 };
 		public static double baseFitness = 1000;
 		public double fitness = baseFitness;
@@ -62,6 +63,16 @@ namespace TankGame
 			}
 		}
 
+		public Player(Player inPlayer)
+		{
+			bodyBase = inPlayer.bodyBase;
+			turretBase = inPlayer.turretBase;
+			tankOrientation = inPlayer.tankOrientation;
+			turretOrientation = inPlayer.turretOrientation;
+			bodyOriented = findOrientedImage(bodyBase, inPlayer.tankOrientation);
+			turretOriented = findOrientedImage(turretBase, turretOrientation);
+		}
+
 		public void reset(List<double> maxes)
 		{
 			position.x = spawnPoint.x;
@@ -75,6 +86,11 @@ namespace TankGame
             winBonus = 0;
             distanceToNearestMissile = maxes[2];
             degreeToNearestMissile = maxes[3];
+			for (int i = 0; i < missiles.Length; ++i)
+			{
+				missiles[i].isActive = false;
+				missiles[i].isContact = false;
+			}
 		}
 		public Bitmap findOrientedImage(Bitmap baseImage, Orientation orientation)
 		{
@@ -333,6 +349,16 @@ namespace TankGame
 			velocity.y = 0;
 		}
 
+		public static void renderPlayer(MapBlock[,] map, int width, int height)
+		{
+			//Determine and assign the Pixel:GameTile ratio and assign it to
+			//the static Player and Missile class variables xScale and yScale.
+			Player.xScale = width / Game.WIDTH_IN_TILES;
+			Player.yScale = height / Game.HEIGHT_IN_TILES;
+			Missile.xScale = Player.xScale;
+			Missile.yScale = Player.yScale;
+		}
+
 		public Bitmap scaleBody()
 		{
 			if(bodyScaled != null)
@@ -371,10 +397,6 @@ namespace TankGame
             {
                 botInput[i] = botInput[i] / inputMaxes[i];
             }
-			//for (int i = 0; i < botInput.Count; ++i)
-			//{
-			//	botInput[i] = NeuralNetwork.sigmoid(2, 2, botInput[i]);
-			//}
 		}
 	}
 }
