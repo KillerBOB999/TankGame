@@ -290,28 +290,28 @@ namespace TankGame
 				peakBlue = blue.fitness;
 			}
 
-			if (rng.NextDouble() < 0.5)
-			{
-				NeuralNetwork mama;
-				NeuralNetwork papa;
-				if (red.fitness < blue.fitness)
-				{
-					mama = new NeuralNetwork(red.botBrain);
-					papa = new NeuralNetwork(blue.botBrain);
-					red.botBrain = Mutatinator.cross(mama, papa);
-				}
-				else
-				{
-					mama = new NeuralNetwork(blue.botBrain);
-					papa = new NeuralNetwork(red.botBrain);
-					blue.botBrain = Mutatinator.cross(mama, papa);
-				}
-			}
-			else
-			{
-				Mutatinator.mutate(red.botBrain);
-				Mutatinator.mutate(blue.botBrain);
-			}
+			//if (rng.NextDouble() < 0.5)
+			//{
+			//	NeuralNetwork mama;
+			//	NeuralNetwork papa;
+			//	if (red.fitness < blue.fitness)
+			//	{
+			//		mama = new NeuralNetwork(red.botBrain);
+			//		papa = new NeuralNetwork(blue.botBrain);
+			//		red.botBrain = Mutatinator.cross(mama, papa);
+			//	}
+			//	else
+			//	{
+			//		mama = new NeuralNetwork(blue.botBrain);
+			//		papa = new NeuralNetwork(red.botBrain);
+			//		blue.botBrain = Mutatinator.cross(mama, papa);
+			//	}
+			//}
+			//else
+			//{
+			//	Mutatinator.mutate(red.botBrain);
+			//	Mutatinator.mutate(blue.botBrain);
+			//}
 		}
 
 		/// <summary>
