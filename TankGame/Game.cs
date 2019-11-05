@@ -10,8 +10,6 @@ namespace TankGame
 {
 	public class Game
 	{
-		public bool display;
-
 		public Game() { }
 
 		public Game(Player Red, Player Blue, bool display)
@@ -33,7 +31,7 @@ namespace TankGame
         //START GLOBALS----------------------------------------------------------------------------------
 
         public int numberOfIterations = 0;
-        public int maxIterations = 500;
+        public int maxIterations = 5000;
 
 		public WorldState worldState;
 		public int generationCount = 0;
@@ -398,7 +396,10 @@ namespace TankGame
 					++numRedWins;
 					break;
 			}
-			handleGameover();
+			if (worldState != WorldState.GameInProgress)
+			{
+				handleGameover();
+			}
 		}
 
 		/// <summary>

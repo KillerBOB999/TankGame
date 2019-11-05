@@ -87,7 +87,7 @@ namespace TankGame
         {
             double randomDouble = rng.NextDouble();
             int addIf1 = rng.Next(0, 1);
-            int indexOfEdge = rng.Next(1, neuralNetwork.nextID);
+            int indexOfEdge = rng.Next(1, neuralNetwork.edges.Count - 1);
 
             if(addIf1 == 1)
             {
@@ -103,7 +103,7 @@ namespace TankGame
         {
             double randomDouble = rng.NextDouble();
             int addIf1 = rng.Next(0, 1);
-            int indexOfEdge = rng.Next(1, neuralNetwork.nextID);
+            int indexOfEdge = rng.Next(1, neuralNetwork.edges.Count - 1);
 
             if (addIf1 == 1)
             {

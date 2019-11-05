@@ -17,12 +17,12 @@ namespace TankGame
 		public Form1()
 		{
 			InitializeComponent();
-			SetUp();
 			Focus();
 			Timer timer = new Timer();
 			timer.Interval = 5;        //# of milliseconds
 			timer.Tick += Timer_Tick;
 			timer.Start();
+			SetUp();
 		}
 
 		private void Timer_Tick(object sender, EventArgs e)
@@ -70,6 +70,7 @@ namespace TankGame
 		int nextBrainID = 0;
 		static Dictionary<int, NeuralNetwork> hallOfFame = new Dictionary<int, NeuralNetwork>();
 		static Dictionary<int, NeuralNetwork> brains = new Dictionary<int, NeuralNetwork>();
+		static Dictionary<int, double> brainFitness = new Dictionary<int, double>();
 		Game[] games;
 		Game displayGame;
 
@@ -84,33 +85,181 @@ namespace TankGame
 				games[i].blue.botBrainID = nextBrainID;
 				brains.Add(nextBrainID++, games[i].blue.botBrain);
 			}
-            List<Task> toDo = new List<Task>();
-            foreach (Game game in games)
-            {
-                toDo.Add(Task.Run(() => {
-                    while (game.worldState == WorldState.GameInProgress)
-                    {
-                        game.GameLoop();
-                    }
-                }));
-            }
-            Task.WaitAll(toDo.ToArray());
-			games[0].display = false;
+
 			displayGame = games[0];
+			while (true)
+			{
+				for (int i = 0; i < games.Length; ++i)
+				{
+					List<int> activeBrains = new List<int>();
+					Random rng = new Random();
+					int rand1 = rng.Next(0, nextBrainID);
+					int rand2 = rng.Next(0, nextBrainID);
+					while (activeBrains.Contains(rand1))
+					{
+						rand1 = rng.Next(0, nextBrainID);
+						activeBrains.Add(rand1);
+					}
+					while (activeBrains.Contains(rand2))
+					{
+						rand2 = rng.Next(0, nextBrainID);
+						activeBrains.Add(rand2);
+					}
+					games[i] = new Game(new Player(red), new Player(blue), false);
+					games[i].red.botBrainID = rand1;
+					red.botBrain = brains[rand1];
+					games[i].blue.botBrainID = rand2;
+					blue.botBrain = brains[rand2];
+				}
+				runSimulation();
+			}
+		}
+
+		public void runSimulation()
+		{
+			List<Task> toDo = new List<Task>();
+			foreach (Game game in games)
+			{
+				toDo.Add(Task.Run(() => {
+					while (game.worldState == WorldState.GameInProgress)
+					{
+						game.GameLoop();
+					}
+				}));
+			}
+			Task.WaitAll(toDo.ToArray());
+			updateBrains();
+			Render();
 		}
 
 		public void updateBrains()
 		{
 			for (int i = 0; i < games.Length; ++i)
 			{
-				brains[games[i].red.botBrainID] = games[i].red.botBrain;
-				brains[games[i].blue.botBrainID] = games[i].blue.botBrain;
+				if (!brains.ContainsKey(games[i].red.botBrainID))
+				{
+					brains.Add(games[i].red.botBrainID, games[i].red.botBrain);
+				}
+				else
+				{
+					brains[games[i].red.botBrainID] = games[i].red.botBrain;
+				}
+				if (!brains.ContainsKey(games[i].blue.botBrainID))
+				{
+					brains.Add(games[i].blue.botBrainID, games[i].blue.botBrain);
+				}
+				else
+				{
+					brains[games[i].blue.botBrainID] = games[i].blue.botBrain;
+				}
 			}
-			int maxFitnessID;
+			int maxFitnessID = -1;
 			double maxFitnessValue = 0;
 			foreach (Game game in games)
 			{
+				if (game.red.fitness > maxFitnessValue)
+				{
+					maxFitnessID = game.red.botBrainID;
+					maxFitnessValue = game.red.fitness;
+				}
+				else if (game.blue.fitness > maxFitnessValue)
+				{
+					maxFitnessID = game.blue.botBrainID;
+					maxFitnessValue = game.blue.fitness;
+				}
+				if (!brainFitness.ContainsKey(game.red.botBrainID))
+				{
+					brainFitness.Add(game.red.botBrainID, game.red.fitness);
+				}
+				else
+				{
+					brainFitness[game.red.botBrainID] = game.red.fitness;
+				}
+				if (!brainFitness.ContainsKey(game.blue.botBrainID))
+				{
+					brainFitness.Add(game.blue.botBrainID, game.blue.fitness);
+				}
+				else
+				{
+					brainFitness[game.blue.botBrainID] = game.blue.fitness;
+				}
+			}
+			if (!hallOfFame.ContainsKey(maxFitnessID))
+			{
+				hallOfFame.Add(maxFitnessID, brains[maxFitnessID]);
+			}
+			else
+			{
+				hallOfFame[maxFitnessID] = brains[maxFitnessID];
+			}
+			evolveBrains();
+		}
 
+		public void evolveBrains()
+		{
+			Random rng = new Random();
+			double totalFitness = 0;
+			List<Tuple<int, double>> rangeOfMating = new List<Tuple<int, double>>();
+			List<KeyValuePair<int, double>> sortedFitnesses = brainFitness.ToList();
+			sortedFitnesses.Sort((pair1, pair2) => pair1.Value.CompareTo(pair2.Value));
+			Dictionary<int, NeuralNetwork> replacements = new Dictionary<int, NeuralNetwork>();
+
+			int[] parentIDs;
+
+			foreach(var brainID_FitnessPair in brainFitness)
+			{
+				totalFitness += brainID_FitnessPair.Value;
+			}
+
+			foreach (var brainID_FitnessPair in brainFitness)
+			{
+				if(rangeOfMating.Count == 0)
+				{
+					rangeOfMating = new List<Tuple<int, double>>(1) { new Tuple<int, double>(brainID_FitnessPair.Key, brainID_FitnessPair.Value / totalFitness) };
+				}
+				else
+				{
+					rangeOfMating.Add(new Tuple<int, double>(brainID_FitnessPair.Key, rangeOfMating.Last().Item2 + brainID_FitnessPair.Value / totalFitness));
+				}
+			}
+
+			for (int replaceIndex = 0; replaceIndex < sortedFitnesses.Count / 2; replaceIndex += 2)
+			{
+				parentIDs = new int[] { -1, -1 };
+				int parentIndex = 0;
+				while (parentIDs[1] == -1)
+				{
+					double rand = rng.NextDouble();
+
+					for (int matingIndex = 1; matingIndex < rangeOfMating.Count; ++matingIndex)
+					{
+						if (rand < rangeOfMating[matingIndex].Item2 && rangeOfMating[matingIndex - 1].Item2 < rand)
+						{
+							parentIDs[parentIndex] = rangeOfMating[matingIndex].Item1;
+							parentIndex++;
+						}
+					}
+				}
+
+				int moreFitID;
+				int lessFitID;
+				if (brainFitness[parentIDs[0]] < brainFitness[parentIDs[1]])
+				{
+					moreFitID = 1;
+					lessFitID = 0;
+				}
+				else
+				{
+					moreFitID = 0;
+					lessFitID = 1;
+				}
+				replacements.Add(sortedFitnesses[replaceIndex].Key, Mutatinator.cross(brains[parentIDs[lessFitID]], brains[parentIDs[moreFitID]]));
+				Mutatinator.mutate(replacements[sortedFitnesses[replaceIndex].Key]);
+			}
+
+			foreach(KeyValuePair<int, NeuralNetwork> replacement in replacements)
+			{
+				brains[replacement.Key] = replacements[replacement.Key];
 			}
 		}
 

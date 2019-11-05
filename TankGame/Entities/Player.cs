@@ -63,6 +63,20 @@ namespace TankGame
 			}
 		}
 
+		public Player(string tankBody, string tankTurret, Orientation bodyOrientation, Orientation gunOrientation, bool isHum, bool isRed, int brainID, NeuralNetwork brain)
+		{
+			bodyBase = new Bitmap(Image.FromFile(tankBody));
+			turretBase = new Bitmap(Image.FromFile(tankTurret));
+			tankOrientation = bodyOrientation;
+			turretOrientation = gunOrientation;
+			bodyOriented = findOrientedImage(bodyBase, bodyOrientation);
+			turretOriented = findOrientedImage(turretBase, turretOrientation);
+			isHuman = isHum;
+			isRedPlayer = isRed;
+			botBrain = brain;
+			botBrainID = brainID;
+		}
+
 		public Player(Player inPlayer)
 		{
 			bodyBase = inPlayer.bodyBase;

@@ -58,7 +58,11 @@ namespace TankGame
                 {
                     if(edge.inNeuronID == topologicalOrdering[i])
                     {
-                        if (!currentProgress.ContainsKey(edge.outNeuronID))
+						if (!currentProgress.ContainsKey(edge.inNeuronID))
+						{
+							currentProgress.Add(edge.inNeuronID, edge.weight + edge.bias);
+						}
+						if (!currentProgress.ContainsKey(edge.outNeuronID))
                         {
                             currentProgress.Add(edge.outNeuronID, edge.weight * currentProgress[edge.inNeuronID] + edge.bias);
                         }
