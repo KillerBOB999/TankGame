@@ -84,7 +84,18 @@ namespace TankGame
 				games[i].blue.botBrainID = nextBrainID;
 				brains.Add(nextBrainID++, games[i].blue.botBrain);
 			}
-			games[0].display = true;
+            List<Task> toDo = new List<Task>();
+            foreach (Game game in games)
+            {
+                toDo.Add(Task.Run(() => {
+                    while (game.worldState == WorldState.GameInProgress)
+                    {
+                        game.GameLoop();
+                    }
+                }));
+            }
+            Task.WaitAll(toDo.ToArray());
+			games[0].display = false;
 			displayGame = games[0];
 		}
 
@@ -99,6 +110,7 @@ namespace TankGame
 			double maxFitnessValue = 0;
 			foreach (Game game in games)
 			{
+
 			}
 		}
 
@@ -192,7 +204,11 @@ namespace TankGame
 		/// </summary>
 		private void AddPlayers(Graphics graphics)
 		{
-			graphics.DrawImage(displayGame.red.bodyOriented, new Point(displayGame.red.position.x * Player.xScale, displayGame.red.position.y * Player.yScale));
+            displayGame.red.bodyOriented = displayGame.red.findOrientedImage(displayGame.red.scaleBody(), displayGame.red.tankOrientation);
+            displayGame.red.turretOriented = displayGame.red.findOrientedImage(displayGame.red.scaleTurret(), displayGame.red.turretOrientation);
+            displayGame.blue.bodyOriented = displayGame.blue.findOrientedImage(displayGame.blue.scaleBody(), displayGame.blue.tankOrientation);
+            displayGame.blue.turretOriented = displayGame.blue.findOrientedImage(displayGame.blue.scaleTurret(), displayGame.blue.turretOrientation);
+            graphics.DrawImage(displayGame.red.bodyOriented, new Point(displayGame.red.position.x * Player.xScale, displayGame.red.position.y * Player.yScale));
 			graphics.DrawImage(displayGame.red.turretOriented, new Point(displayGame.red.position.x * Player.xScale, displayGame.red.position.y * Player.yScale));
 			graphics.DrawImage(displayGame.blue.bodyOriented, new Point(displayGame.blue.position.x * Player.xScale, displayGame.blue.position.y * Player.yScale));
 			graphics.DrawImage(displayGame.blue.turretOriented, new Point(displayGame.blue.position.x * Player.xScale, displayGame.blue.position.y * Player.yScale));
@@ -216,7 +232,8 @@ namespace TankGame
 			{
 				if (displayGame.red.missiles[i].isActive)
 				{
-					graphics.DrawImage(displayGame.red.missiles[i].missileOriented, new Point(displayGame.red.missiles[i].position.x * Missile.xScale, displayGame.red.missiles[i].position.y * Missile.yScale));
+                    displayGame.red.missiles[i].missileOriented = displayGame.red.missiles[i].findOrientedImage(displayGame.red.missiles[i].scaleMissile(), displayGame.red.missiles[i].missileOrientation);
+                    graphics.DrawImage(displayGame.red.missiles[i].missileOriented, new Point(displayGame.red.missiles[i].position.x * Missile.xScale, displayGame.red.missiles[i].position.y * Missile.yScale));
 				}
 				else if (displayGame.red.missiles[i].isContact)
 				{
@@ -227,7 +244,8 @@ namespace TankGame
 			{
 				if (displayGame.blue.missiles[i].isActive)
 				{
-					graphics.DrawImage(displayGame.blue.missiles[i].missileOriented, new Point(displayGame.blue.missiles[i].position.x * Missile.xScale, displayGame.blue.missiles[i].position.y * Missile.yScale));
+                    displayGame.blue.missiles[i].missileOriented = displayGame.blue.missiles[i].findOrientedImage(displayGame.blue.missiles[i].scaleMissile(), displayGame.blue.missiles[i].missileOrientation);
+                    graphics.DrawImage(displayGame.blue.missiles[i].missileOriented, new Point(displayGame.blue.missiles[i].position.x * Missile.xScale, displayGame.blue.missiles[i].position.y * Missile.yScale));
 				}
 				else if (displayGame.blue.missiles[i].isContact)
 				{

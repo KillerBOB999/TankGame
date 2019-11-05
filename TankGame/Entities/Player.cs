@@ -342,9 +342,6 @@ namespace TankGame
 				}
 			}
 
-			bodyOriented = findOrientedImage(scaleBody(), tankOrientation);
-			turretOriented = findOrientedImage(scaleTurret(), turretOrientation);
-
 			velocity.x = 0;
 			velocity.y = 0;
 		}
@@ -388,6 +385,18 @@ namespace TankGame
             else
             {
                 fitness = winBonus + (baseFitness / (numOfMoves + numOfMissilesFired + elapsed.TotalSeconds));
+            }
+        }
+
+        public void calcFitness(Player target, int numIterations)
+        {
+            if (target.distanceToNearestMissile != 0)
+            {
+                fitness = winBonus + (100 / target.distanceToNearestMissile) + (baseFitness / (numOfMoves + numOfMissilesFired + numIterations));
+            }
+            else
+            {
+                fitness = winBonus + (baseFitness / (numOfMoves + numOfMissilesFired + numIterations));
             }
         }
 

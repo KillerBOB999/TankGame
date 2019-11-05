@@ -42,14 +42,13 @@ namespace TankGame
         public Dictionary<int, double> feedForward(List<double>inputValues)
         {
             sizeOfInputLayer = inputValues.Count;
-            int nodeID = 1;
-            Dictionary<int, double> activationValues = new Dictionary<int, double>();
+            int nodeID = 0;
             Dictionary<int, double> currentProgress = new Dictionary<int, double>();
             Dictionary<int, double> outputLayer = new Dictionary<int, double>();
 
             foreach (var inputValue in inputValues)
             {
-                activationValues.Add(nodeID, inputValue);
+                currentProgress.Add(nodeID, inputValue);
                 ++nodeID;
             }
             
@@ -61,19 +60,26 @@ namespace TankGame
                     {
                         if (!currentProgress.ContainsKey(edge.outNeuronID))
                         {
-                            currentProgress.Add(edge.outNeuronID, edge.weight * activationValues[edge.inNeuronID] + edge.bias);
+                            currentProgress.Add(edge.outNeuronID, edge.weight * currentProgress[edge.inNeuronID] + edge.bias);
                         }
                         else
                         {
-                            currentProgress[edge.outNeuronID] += edge.weight * activationValues[edge.inNeuronID] + edge.bias;
+                            currentProgress[edge.outNeuronID] += edge.weight * currentProgress[edge.inNeuronID] + edge.bias;
                         }
                     }
                 }
             }
 
-            for (int i = 0; i < outputLayerIDs.Count(); ++i)
+            foreach (int outputLayerID in outputLayerIDs)
             {
-                outputLayer.Add(outputLayerIDs[i], currentProgress[outputLayerIDs[i]]);
+                if (currentProgress.ContainsKey(outputLayerID))
+                {
+                    outputLayer.Add(outputLayerID, currentProgress[outputLayerID]);
+                }
+                else
+                {
+                    outputLayer.Add(outputLayerID, 0);
+                }
             }
 
             sizeOfOutputLayer = outputLayer.Count();

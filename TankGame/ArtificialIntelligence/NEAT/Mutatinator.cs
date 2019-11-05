@@ -59,11 +59,9 @@ namespace TankGame
         private static void addNode(NeuralNetwork neuralNetwork)
         {
             int indexOfEdge = rng.Next(1, neuralNetwork.edges.Count - 1);
-            Edge oldEdge = new Edge(neuralNetwork.edges[indexOfEdge]);
-
-            removeEdge(neuralNetwork, indexOfEdge);
-            addEdge(neuralNetwork, oldEdge.inNeuronID, neuralNetwork.nextID);
-            addEdge(neuralNetwork, neuralNetwork.nextID, oldEdge.outNeuronID);
+            int oldOutID = neuralNetwork.edges[indexOfEdge].outNeuronID;
+            neuralNetwork.edges[indexOfEdge].outNeuronID = neuralNetwork.nextID;
+            addEdge(neuralNetwork, neuralNetwork.nextID, oldOutID);
             ++neuralNetwork.nextID;
 
             for(int i = 0; i < neuralNetwork.topologicalOrdering.Count; ++i)

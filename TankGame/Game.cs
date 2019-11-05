@@ -11,7 +11,6 @@ namespace TankGame
 	public class Game
 	{
 		public bool display;
-		public bool isUpdating;
 
 		public Game() { }
 
@@ -20,10 +19,10 @@ namespace TankGame
 			red = Red;
 			blue = Blue;
 			InitializeData();
-			Timer timer = new Timer();
-			timer.Interval = 5;        //# of milliseconds
-			timer.Tick += Timer_Tick;
-			timer.Start();
+			//Timer timer = new Timer();
+			//timer.Interval = 5;        //# of milliseconds
+			//timer.Tick += Timer_Tick;
+			//timer.Start();
 		}
 
 		private void Timer_Tick(object sender, EventArgs e)
@@ -31,10 +30,13 @@ namespace TankGame
 			GameLoop();
 		}
 
-		//START GLOBALS----------------------------------------------------------------------------------
+        //START GLOBALS----------------------------------------------------------------------------------
+
+        public int numberOfIterations = 0;
+        public int maxIterations = 500;
 
 		public WorldState worldState;
-		public int generationCount = 1;
+		public int generationCount = 0;
 		public double baseTimeLimitInSeconds = 1;
 		public double timeLimitInSeconds = 1;
 		public int numRedWins = 0;
@@ -83,7 +85,8 @@ namespace TankGame
 		/// </summary>
 		private void InitializeData()
 		{
-			worldState = WorldState.GameInProgress;
+            ++generationCount;
+            worldState = WorldState.GameInProgress;
 
 			startTime = DateTime.Now;
 			currentTime = startTime;
@@ -137,12 +140,12 @@ namespace TankGame
 				Random rng = new Random();
 				for (int playerCounter = 0; playerCounter < 2; ++playerCounter)
 				{
-					inLayerId = 1;
+					inLayerId = 0;
 					for (int i = 0; i < Player.NUM_OF_INPUTS; ++i)
 					{
 						for (int command = (int)ControlCommand.NONE; command < (int)ControlCommand.FINAL_UNUSED; ++command)
 						{
-							outLayerId = Player.NUM_OF_INPUTS + command + 1;
+							outLayerId = Player.NUM_OF_INPUTS + command;
 							tempEdges[playerCounter].Add(new Edge(inLayerId, outLayerId, rng.NextDouble(), rng.NextDouble()));
 							if (!outputLayer.Contains(outLayerId))
 							{
@@ -277,8 +280,8 @@ namespace TankGame
 			//	timeLimitInSeconds += baseTimeLimitInSeconds;
 			//}
 
-			red.calcFitness(blue, elapsed);
-			blue.calcFitness(red, elapsed);
+			red.calcFitness(blue, numberOfIterations);
+			blue.calcFitness(red, numberOfIterations);
 
 			if (red.fitness > peakRed)
 			{
@@ -311,9 +314,6 @@ namespace TankGame
 				Mutatinator.mutate(red.botBrain);
 				Mutatinator.mutate(blue.botBrain);
 			}
-
-			++generationCount;
-			InitializeData();
 		}
 
 		/// <summary>
@@ -328,10 +328,10 @@ namespace TankGame
 		/// </summary>
 		private void Update()
 		{
-			if (elapsed.TotalSeconds >= timeLimitInSeconds)
+			if (numberOfIterations >= maxIterations)
 			{
 				worldState = WorldState.GameOverTimeOut;
-				elapsed = DateTime.Now - DateTime.Now;
+				//elapsed = DateTime.Now - DateTime.Now;
 			}
 			if (worldState == WorldState.GameInProgress)
 			{
@@ -385,23 +385,20 @@ namespace TankGame
 					}
 				}
 			}
-			else
+			switch (worldState)
 			{
-				switch (worldState)
-				{
-					case WorldState.GameOverBlueWin:
-						blue.winBonus = currentWinBonus;
-						red.winBonus = -currentWinBonus;
-						++numBlueWins;
-						break;
-					case WorldState.GameOverRedWin:
-						red.winBonus = currentWinBonus;
-						blue.winBonus = -currentWinBonus;
-						++numRedWins;
-						break;
-				}
-				handleGameover();
+				case WorldState.GameOverBlueWin:
+					blue.winBonus = currentWinBonus;
+					red.winBonus = -currentWinBonus;
+					++numBlueWins;
+					break;
+				case WorldState.GameOverRedWin:
+					red.winBonus = currentWinBonus;
+					blue.winBonus = -currentWinBonus;
+					++numRedWins;
+					break;
 			}
+			handleGameover();
 		}
 
 		/// <summary>
@@ -417,9 +414,8 @@ namespace TankGame
 		/// </summary>
 		public void GameLoop()
 		{
-			isUpdating = true;
 			Update();
-			isUpdating = false;
+            ++numberOfIterations;
 		}
 	}
 }

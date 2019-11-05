@@ -76,6 +76,11 @@ namespace TankGame
 			position.y = tankPosition.y;
 		}
 
+        public void renderMissile()
+        {
+
+        }
+
 		public void updateMissile(MapBlock[,] map, ref WorldState worldState)
 		{
 			if (isActive)
@@ -112,9 +117,6 @@ namespace TankGame
 					map[newPosition.x, newPosition.y].isOccupied = true;
 					map[newPosition.x, newPosition.y].isOccMissile = true;
 				}
-
-				missileOriented = findOrientedImage(scaleMissile(), missileOrientation);
-				newPosition = null;
 			}
 		}
 
