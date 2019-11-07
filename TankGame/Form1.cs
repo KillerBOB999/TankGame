@@ -98,14 +98,14 @@ namespace TankGame
 					while (activeBrains.Contains(rand1))
 					{
 						rand1 = rng.Next(0, nextBrainID);
-						activeBrains.Add(rand1);
 					}
-					while (activeBrains.Contains(rand2))
+                    activeBrains.Add(rand1);
+                    while (activeBrains.Contains(rand2))
 					{
 						rand2 = rng.Next(0, nextBrainID);
-						activeBrains.Add(rand2);
 					}
-					games[i] = new Game(new Player(red), new Player(blue), false);
+                    activeBrains.Add(rand2);
+                    games[i] = new Game(new Player(red), new Player(blue), false);
 					games[i].red.botBrainID = rand1;
 					red.botBrain = brains[rand1];
 					games[i].blue.botBrainID = rand2;
