@@ -154,8 +154,8 @@ namespace TankGame
 					}
 				}
 
-				red.botBrain = new NeuralNetwork(tempEdges[0], Player.NUM_OF_INPUTS + (int)ControlCommand.FINAL_UNUSED, outputLayer);
-				blue.botBrain = new NeuralNetwork(tempEdges[1], Player.NUM_OF_INPUTS + (int)ControlCommand.FINAL_UNUSED, outputLayer);
+				red.organism.botBrain = new NeuralNetwork(tempEdges[0], Player.NUM_OF_INPUTS + (int)ControlCommand.FINAL_UNUSED, outputLayer);
+				blue.organism.botBrain = new NeuralNetwork(tempEdges[1], Player.NUM_OF_INPUTS + (int)ControlCommand.FINAL_UNUSED, outputLayer);
 			}
 
 			//Initialize the players
@@ -224,7 +224,7 @@ namespace TankGame
 
 		private void DoAIStuff(Player player)
 		{
-			Dictionary<int, double> outputDict = player.botBrain.feedForward(player.botInput);
+			Dictionary<int, double> outputDict = player.organism.botBrain.feedForward(player.botInput);
 			double valueOfHighest = -1;
 			int ControlCommandEquivalent = -1;
 			for (int nodeID = Player.NUM_OF_INPUTS + 1; nodeID < Player.NUM_OF_INPUTS + (int)ControlCommand.FINAL_UNUSED; ++nodeID)
@@ -281,36 +281,36 @@ namespace TankGame
 			red.calcFitness(blue, numberOfIterations);
 			blue.calcFitness(red, numberOfIterations);
 
-			if (red.fitness > peakRed)
+			if (red.organism.fitness > peakRed)
 			{
-				peakRed = red.fitness;
+				peakRed = red.organism.fitness;
 			}
-			if (blue.fitness > peakBlue)
+			if (blue.organism.fitness > peakBlue)
 			{
-				peakBlue = blue.fitness;
+				peakBlue = blue.organism.fitness;
 			}
 
 			//if (rng.NextDouble() < 0.5)
 			//{
 			//	NeuralNetwork mama;
 			//	NeuralNetwork papa;
-			//	if (red.fitness < blue.fitness)
+			//	if (red.organism.fitness < blue.organism.fitness)
 			//	{
-			//		mama = new NeuralNetwork(red.botBrain);
-			//		papa = new NeuralNetwork(blue.botBrain);
-			//		red.botBrain = Mutatinator.cross(mama, papa);
+			//		mama = new NeuralNetwork(red.organism.botBrain);
+			//		papa = new NeuralNetwork(blue.organism.botBrain);
+			//		red.organism.botBrain = Mutatinator.cross(mama, papa);
 			//	}
 			//	else
 			//	{
-			//		mama = new NeuralNetwork(blue.botBrain);
-			//		papa = new NeuralNetwork(red.botBrain);
-			//		blue.botBrain = Mutatinator.cross(mama, papa);
+			//		mama = new NeuralNetwork(blue.organism.botBrain);
+			//		papa = new NeuralNetwork(red.organism.botBrain);
+			//		blue.organism.botBrain = Mutatinator.cross(mama, papa);
 			//	}
 			//}
 			//else
 			//{
-			//	Mutatinator.mutate(red.botBrain);
-			//	Mutatinator.mutate(blue.botBrain);
+			//	Mutatinator.mutate(red.organism.botBrain);
+			//	Mutatinator.mutate(blue.organism.botBrain);
 			//}
 		}
 

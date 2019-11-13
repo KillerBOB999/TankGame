@@ -5,16 +5,15 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Drawing;
 using System.Windows.Forms;
+using TankGame.Entities;
 
 namespace TankGame
 {
 	public class Player
 	{
-		public NeuralNetwork botBrain;
-		public int botBrainID;
+        public Organism organism;
 		public List<double> botInput = new List<double>() { 0, 0, 0, 0 };
 		public static double baseFitness = 1000;
-		public double fitness = baseFitness;
 		public double winBonus = 0;
 		public int numOfMoves = 0;
 		public int numOfMissilesFired = 0;
@@ -59,7 +58,7 @@ namespace TankGame
 
 			if (!isHuman)
 			{
-				botBrain = new NeuralNetwork();
+				organism.botBrain = new NeuralNetwork();
 			}
 		}
 
@@ -73,8 +72,8 @@ namespace TankGame
 			turretOriented = findOrientedImage(turretBase, turretOrientation);
 			isHuman = isHum;
 			isRedPlayer = isRed;
-			botBrain = brain;
-			botBrainID = brainID;
+            organism.botBrain = brain;
+            organism.botBrainID = brainID;
 		}
 
 		public Player(Player inPlayer)
@@ -394,11 +393,11 @@ namespace TankGame
 		{
             if (target.distanceToNearestMissile != 0)
             {
-                fitness = winBonus + (100 / target.distanceToNearestMissile) + (baseFitness / (numOfMoves + numOfMissilesFired + elapsed.TotalSeconds));
+                organism.fitness = winBonus + (100 / target.distanceToNearestMissile) + (baseFitness / (numOfMoves + numOfMissilesFired + elapsed.TotalSeconds));
             }
             else
             {
-                fitness = winBonus + (baseFitness / (numOfMoves + numOfMissilesFired + elapsed.TotalSeconds));
+                organism.fitness = winBonus + (baseFitness / (numOfMoves + numOfMissilesFired + elapsed.TotalSeconds));
             }
         }
 
@@ -406,11 +405,11 @@ namespace TankGame
         {
             if (target.distanceToNearestMissile != 0)
             {
-                fitness = winBonus + (100 / target.distanceToNearestMissile) + (baseFitness / (numOfMoves + numOfMissilesFired + numIterations));
+                organism.fitness = winBonus + (100 / target.distanceToNearestMissile) + (baseFitness / (numOfMoves + numOfMissilesFired + numIterations));
             }
             else
             {
-                fitness = winBonus + (baseFitness / (numOfMoves + numOfMissilesFired + numIterations));
+                organism.fitness = winBonus + (baseFitness / (numOfMoves + numOfMissilesFired + numIterations));
             }
         }
 

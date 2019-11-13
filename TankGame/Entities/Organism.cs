@@ -9,12 +9,24 @@ namespace TankGame.Entities
     public class Organism
     {
         public NeuralNetwork botBrain;
-        public int brainID;
+        public int botBrainID;
+        public double fitness;
 
+        public Organism()
+        {
+
+        }
         public Organism(NeuralNetwork NN, int ID)
         {
             botBrain = NN;
-            brainID = ID;
+            botBrainID = ID;
+        }
+
+        public Organism(NeuralNetwork NN, int ID, double fitnessScore)
+        {
+            botBrain = NN;
+            botBrainID = ID;
+            fitness = fitnessScore;
         }
     }
 }

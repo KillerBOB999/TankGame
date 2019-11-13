@@ -80,10 +80,10 @@ namespace TankGame
 			for (int i = 0; i < games.Length; ++i)
 			{
 				games[i] = new Game(new Player(red), new Player(blue), false);
-				games[i].red.botBrainID = nextBrainID;
-				brains.Add(nextBrainID++, games[i].red.botBrain);
-				games[i].blue.botBrainID = nextBrainID;
-				brains.Add(nextBrainID++, games[i].blue.botBrain);
+				games[i].red.organism.botBrainID = nextBrainID;
+				brains.Add(nextBrainID++, games[i].red.organism.botBrain);
+				games[i].blue.organism.botBrainID = nextBrainID;
+				brains.Add(nextBrainID++, games[i].blue.organism.botBrain);
 			}
 
 			displayGame = games[0];
@@ -106,10 +106,10 @@ namespace TankGame
 					}
                     activeBrains.Add(rand2);
                     games[i] = new Game(new Player(red), new Player(blue), false);
-					games[i].red.botBrainID = rand1;
-					red.botBrain = brains[rand1];
-					games[i].blue.botBrainID = rand2;
-					blue.botBrain = brains[rand2];
+					games[i].red.organism.botBrainID = rand1;
+					red.organism.botBrain = brains[rand1];
+					games[i].blue.organism.botBrainID = rand2;
+					blue.organism.botBrain = brains[rand2];
 				}
 				runSimulation();
 			}
@@ -136,52 +136,52 @@ namespace TankGame
 		{
 			for (int i = 0; i < games.Length; ++i)
 			{
-				if (!brains.ContainsKey(games[i].red.botBrainID))
+				if (!brains.ContainsKey(games[i].red.organism.botBrainID))
 				{
-					brains.Add(games[i].red.botBrainID, games[i].red.botBrain);
+					brains.Add(games[i].red.organism.botBrainID, games[i].red.organism.botBrain);
 				}
 				else
 				{
-					brains[games[i].red.botBrainID] = games[i].red.botBrain;
+					brains[games[i].red.organism.botBrainID] = games[i].red.organism.botBrain;
 				}
-				if (!brains.ContainsKey(games[i].blue.botBrainID))
+				if (!brains.ContainsKey(games[i].blue.organism.botBrainID))
 				{
-					brains.Add(games[i].blue.botBrainID, games[i].blue.botBrain);
+					brains.Add(games[i].blue.organism.botBrainID, games[i].blue.organism.botBrain);
 				}
 				else
 				{
-					brains[games[i].blue.botBrainID] = games[i].blue.botBrain;
+					brains[games[i].blue.organism.botBrainID] = games[i].blue.organism.botBrain;
 				}
 			}
 			int maxFitnessID = -1;
 			double maxFitnessValue = 0;
 			foreach (Game game in games)
 			{
-				if (game.red.fitness > maxFitnessValue)
+				if (game.red.organism.fitness > maxFitnessValue)
 				{
-					maxFitnessID = game.red.botBrainID;
-					maxFitnessValue = game.red.fitness;
+					maxFitnessID = game.red.organism.botBrainID;
+					maxFitnessValue = game.red.organism.fitness;
 				}
-				else if (game.blue.fitness > maxFitnessValue)
+				else if (game.blue.organism.fitness > maxFitnessValue)
 				{
-					maxFitnessID = game.blue.botBrainID;
-					maxFitnessValue = game.blue.fitness;
+					maxFitnessID = game.blue.organism.botBrainID;
+					maxFitnessValue = game.blue.organism.fitness;
 				}
-				if (!brainFitness.ContainsKey(game.red.botBrainID))
+				if (!brainFitness.ContainsKey(game.red.organism.botBrainID))
 				{
-					brainFitness.Add(game.red.botBrainID, game.red.fitness);
-				}
-				else
-				{
-					brainFitness[game.red.botBrainID] = game.red.fitness;
-				}
-				if (!brainFitness.ContainsKey(game.blue.botBrainID))
-				{
-					brainFitness.Add(game.blue.botBrainID, game.blue.fitness);
+					brainFitness.Add(game.red.organism.botBrainID, game.red.organism.fitness);
 				}
 				else
 				{
-					brainFitness[game.blue.botBrainID] = game.blue.fitness;
+					brainFitness[game.red.organism.botBrainID] = game.red.organism.fitness;
+				}
+				if (!brainFitness.ContainsKey(game.blue.organism.botBrainID))
+				{
+					brainFitness.Add(game.blue.organism.botBrainID, game.blue.organism.fitness);
+				}
+				else
+				{
+					brainFitness[game.blue.organism.botBrainID] = game.blue.organism.fitness;
 				}
 			}
 			if (!hallOfFame.ContainsKey(maxFitnessID))
@@ -439,19 +439,19 @@ namespace TankGame
 		{
 			elapsedTimeDisplay.Text = displayGame.elapsed.ToString();
 			currentPotDisplay.Text = displayGame.currentWinBonus.ToString();
-			redCurrentFitnessDisplay.Text = displayGame.red.fitness.ToString();
+			redCurrentFitnessDisplay.Text = displayGame.red.organism.fitness.ToString();
 			redNumberOfMovesDisplay.Text = displayGame.red.numOfMoves.ToString();
 			redMissilesFiredDisplay.Text = displayGame.red.numOfMissilesFired.ToString();
-			blueCurrentFitnessDisplay.Text = displayGame.blue.fitness.ToString();
+			blueCurrentFitnessDisplay.Text = displayGame.blue.organism.fitness.ToString();
 			blueNumberOfMovesDisplay.Text = displayGame.blue.numOfMoves.ToString();
 			blueMissilesFiredDisplay.Text = displayGame.blue.numOfMissilesFired.ToString();
 			generationCountDisplay.Text = displayGame.generationCount.ToString();
 			redNumberOfWinsDisplay.Text = displayGame.numRedWins.ToString();
 			blueNumberOfWinsDisplay.Text = displayGame.numBlueWins.ToString();
-			redNumberOfNodesDisplay.Text = displayGame.red.botBrain.nextID.ToString();
-			blueNumberOfNodesDisplay.Text = displayGame.blue.botBrain.nextID.ToString();
-			redNumberOfEdgesDisplay.Text = displayGame.red.botBrain.edges.Count.ToString();
-			blueNumberOfEdgesDisplay.Text = displayGame.blue.botBrain.edges.Count.ToString();
+			redNumberOfNodesDisplay.Text = displayGame.red.organism.botBrain.nextID.ToString();
+			blueNumberOfNodesDisplay.Text = displayGame.blue.organism.botBrain.nextID.ToString();
+			redNumberOfEdgesDisplay.Text = displayGame.red.organism.botBrain.edges.Count.ToString();
+			blueNumberOfEdgesDisplay.Text = displayGame.blue.organism.botBrain.edges.Count.ToString();
 			redPeakFitnessDisplay.Text = displayGame.peakRed.ToString();
 			bluePeakFitnessDisplay.Text = displayGame.peakBlue.ToString();
 		}
