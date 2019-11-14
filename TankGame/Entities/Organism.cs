@@ -11,6 +11,7 @@ namespace TankGame.Entities
         public NeuralNetwork botBrain;
         public int botBrainID;
         public double fitness;
+        static public int nextBrainID = 0;
 
         public Organism()
         {

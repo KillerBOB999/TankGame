@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
 using System.Diagnostics;
+using TankGame.Entities;
 
 namespace TankGame
 {
@@ -67,7 +68,7 @@ namespace TankGame
 								Orientation.North, Orientation.North, isBlueHumanPlaying, false);
 
 		const int populationSize = 50;
-		int nextBrainID = 0;
+        static int nextBrainID = 0;
 		static Dictionary<int, NeuralNetwork> hallOfFame = new Dictionary<int, NeuralNetwork>();
 		static Dictionary<int, NeuralNetwork> brains = new Dictionary<int, NeuralNetwork>();
 		static Dictionary<int, double> brainFitness = new Dictionary<int, double>();
