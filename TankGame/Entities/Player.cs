@@ -11,7 +11,7 @@ namespace TankGame
 {
 	public class Player
 	{
-        public Organism organism;
+        public Organism organism = new Organism();
 		public List<double> botInput = new List<double>() { 0, 0, 0, 0 };
 		public static double baseFitness = 1000;
 		public double winBonus = 0;
