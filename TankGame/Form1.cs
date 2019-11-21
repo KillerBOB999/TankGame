@@ -28,7 +28,7 @@ namespace TankGame
 
 		private void Timer_Tick(object sender, EventArgs e)
 		{
-			Render();
+			//Render();
 		}
 
 		/// <summary>
@@ -47,16 +47,19 @@ namespace TankGame
 		/// </summary>
 		protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
 		{
-			if (displayGame.red.isHuman == true)
+			if (games[displayGame].red.isHuman == true)
 			{
-				displayGame.red.keyController(keyData);
+				games[displayGame].red.keyController(keyData);
 			}
-			else if (displayGame.blue.isHuman == true)
+			else if (games[displayGame].blue.isHuman == true)
 			{
-				displayGame.blue.keyController(keyData);
+				games[displayGame].blue.keyController(keyData);
 			}
 			return true;
 		}
+
+		public object gameLock = new object();
+		private delegate void SafeCallDelegate(Control control, string text);
 
 		//Who's playing?
 		const bool isRedHumanPlaying = false;
@@ -73,7 +76,7 @@ namespace TankGame
 		static Dictionary<int, Organism> brains = new Dictionary<int, Organism>();
 		static Dictionary<int, double> brainFitness = new Dictionary<int, double>();
 		Game[] games;
-		Game displayGame;
+		int displayGame;
 
 		public void SetUp()
 		{
@@ -90,7 +93,7 @@ namespace TankGame
 				brains.Add(nextBrainID++, games[i].blue.organism);
 			}
 
-			displayGame = games[0];
+			displayGame = 0;
 			Task simulation = new Task(runSimulation);
 			simulation.Start();
 		}
@@ -99,9 +102,9 @@ namespace TankGame
 		{
 			while (true)
 			{
+				List<int> activeBrains = new List<int>();
 				for (int i = 0; i < games.Length; ++i)
 				{
-					List<int> activeBrains = new List<int>();
 					Random rng = new Random();
 					int rand1 = rng.Next(0, nextBrainID);
 					int rand2 = rng.Next(0, nextBrainID);
@@ -129,6 +132,8 @@ namespace TankGame
 						while (game.worldState == WorldState.GameInProgress)
 						{
 							game.GameLoop();
+							//Need to solve multiple access issues for rendering
+							if (game == games[displayGame]) Render();
 						}
 					}));
 				}
@@ -253,6 +258,7 @@ namespace TankGame
 						{
 							parentIDs[parentIndex] = rangeOfMating[matingIndex].Item1;
 							parentIndex++;
+							matingIndex = rangeOfMating.Count;
 						}
 					}
 				}
@@ -270,9 +276,13 @@ namespace TankGame
 					lessFitID = 1;
 				}
 				replacements.Add(sortedFitnesses[replaceIndex].Key, 
-					Mutatinator.cross(brains[parentIDs[lessFitID]].botBrain, 
-									  brains[parentIDs[moreFitID]].botBrain));
-				Mutatinator.mutate(replacements[sortedFitnesses[replaceIndex].Key]);
+					Mutatinator.mutate(
+						//Mutatinator.cross(
+							brains[parentIDs[lessFitID]].botBrain//, 
+									  //brains[parentIDs[moreFitID]].botBrain
+									  )
+						//)
+					);
 			}
 
 			//foreach(KeyValuePair<int, NeuralNetwork> replacement in replacements)
@@ -299,41 +309,41 @@ namespace TankGame
 			int x = splitContainer1.Panel2.Width / Game.WIDTH_IN_TILES;
 			int y = splitContainer1.Panel2.Height / Game.HEIGHT_IN_TILES;
 
-			displayGame.xMapBlock = 0;
-			displayGame.yMapBlock = 0;
+			games[displayGame].xMapBlock = 0;
+			games[displayGame].yMapBlock = 0;
 
 			//Iterate through the terrainMapN string created from the JSON file
-			displayGame.offset.x = 0;       //reset offsets to 0 to ensure correct
-			displayGame.offset.y = 0;       //starting position
+			games[displayGame].offset.x = 0;       //reset offsets to 0 to ensure correct
+			games[displayGame].offset.y = 0;       //starting position
 
-			for (int index = 0; index < displayGame.mapBlocks.Length; ++index)
+			for (int index = 0; index < games[displayGame].mapBlocks.Length; ++index)
 			{
 				//Check to see if you've moved beyond the width of the panel
-				if (displayGame.offset.x >= Game.WIDTH_IN_TILES * x)
+				if (games[displayGame].offset.x >= Game.WIDTH_IN_TILES * x)
 				{
-					displayGame.offset.x = 0;
-					displayGame.offset.y += y;
+					games[displayGame].offset.x = 0;
+					games[displayGame].offset.y += y;
 				}
 
 				//Check to see if you've gone beyond the height of the panel
-				if (displayGame.offset.y >= Game.HEIGHT_IN_TILES * y)
+				if (games[displayGame].offset.y >= Game.HEIGHT_IN_TILES * y)
 				{
-					displayGame.offset.y = 0;
+					games[displayGame].offset.y = 0;
 				}
 
-				if (displayGame.xMapBlock >= Game.WIDTH_IN_TILES)
+				if (games[displayGame].xMapBlock >= Game.WIDTH_IN_TILES)
 				{
-					displayGame.xMapBlock = 0;
-					++displayGame.yMapBlock;
+					games[displayGame].xMapBlock = 0;
+					++games[displayGame].yMapBlock;
 				}
 
-				if (displayGame.yMapBlock >= Game.HEIGHT_IN_TILES)
+				if (games[displayGame].yMapBlock >= Game.HEIGHT_IN_TILES)
 				{
-					displayGame.yMapBlock = 0;
+					games[displayGame].yMapBlock = 0;
 				}
 
 				Brush brush = null;
-				switch (displayGame.mapBlocks[displayGame.xMapBlock, displayGame.yMapBlock].color)
+				switch (games[displayGame].mapBlocks[games[displayGame].xMapBlock, games[displayGame].yMapBlock].color)
 				{
 					case Color.Black:
 						brush = new SolidBrush(System.Drawing.Color.Black);
@@ -348,12 +358,12 @@ namespace TankGame
 						brush = new SolidBrush(System.Drawing.Color.White);
 						break;
 				}
-				graphics.FillRectangle(brush, displayGame.offset.x, displayGame.offset.y, x, y);
+				graphics.FillRectangle(brush, games[displayGame].offset.x, games[displayGame].offset.y, x, y);
 				brush.Dispose();
 
 				//Increment the offset
-				displayGame.offset.x += x;
-				++displayGame.xMapBlock;
+				games[displayGame].offset.x += x;
+				++games[displayGame].xMapBlock;
 			}
 		}
 
@@ -371,14 +381,17 @@ namespace TankGame
 		/// </summary>
 		private void AddPlayers(Graphics graphics)
 		{
-            displayGame.red.bodyOriented = displayGame.red.findOrientedImage(displayGame.red.scaleBody(), displayGame.red.tankOrientation);
-            displayGame.red.turretOriented = displayGame.red.findOrientedImage(displayGame.red.scaleTurret(), displayGame.red.turretOrientation);
-            displayGame.blue.bodyOriented = displayGame.blue.findOrientedImage(displayGame.blue.scaleBody(), displayGame.blue.tankOrientation);
-            displayGame.blue.turretOriented = displayGame.blue.findOrientedImage(displayGame.blue.scaleTurret(), displayGame.blue.turretOrientation);
-            graphics.DrawImage(displayGame.red.bodyOriented, new Point(displayGame.red.position.x * Player.xScale, displayGame.red.position.y * Player.yScale));
-			graphics.DrawImage(displayGame.red.turretOriented, new Point(displayGame.red.position.x * Player.xScale, displayGame.red.position.y * Player.yScale));
-			graphics.DrawImage(displayGame.blue.bodyOriented, new Point(displayGame.blue.position.x * Player.xScale, displayGame.blue.position.y * Player.yScale));
-			graphics.DrawImage(displayGame.blue.turretOriented, new Point(displayGame.blue.position.x * Player.xScale, displayGame.blue.position.y * Player.yScale));
+			lock (gameLock)
+			{
+				games[displayGame].red.bodyOriented = games[displayGame].red.findOrientedImage(games[displayGame].red.scaleBody(), games[displayGame].red.tankOrientation);
+				games[displayGame].red.turretOriented = games[displayGame].red.findOrientedImage(games[displayGame].red.scaleTurret(), games[displayGame].red.turretOrientation);
+				games[displayGame].blue.bodyOriented = games[displayGame].blue.findOrientedImage(games[displayGame].blue.scaleBody(), games[displayGame].blue.tankOrientation);
+				games[displayGame].blue.turretOriented = games[displayGame].blue.findOrientedImage(games[displayGame].blue.scaleTurret(), games[displayGame].blue.turretOrientation);
+				graphics.DrawImage(games[displayGame].red.bodyOriented, new Point(games[displayGame].red.position.x * Player.xScale, games[displayGame].red.position.y * Player.yScale));
+				graphics.DrawImage(games[displayGame].red.turretOriented, new Point(games[displayGame].red.position.x * Player.xScale, games[displayGame].red.position.y * Player.yScale));
+				graphics.DrawImage(games[displayGame].blue.bodyOriented, new Point(games[displayGame].blue.position.x * Player.xScale, games[displayGame].blue.position.y * Player.yScale));
+				graphics.DrawImage(games[displayGame].blue.turretOriented, new Point(games[displayGame].blue.position.x * Player.xScale, games[displayGame].blue.position.y * Player.yScale));
+			}
 		}
 
 		/// <summary>
@@ -395,28 +408,28 @@ namespace TankGame
 		/// </summary>
 		private void AddMissiles(Graphics graphics)
 		{
-			for (int i = 0; i < displayGame.red.missiles.Length; ++i)
+			for (int i = 0; i < games[displayGame].red.missiles.Length; ++i)
 			{
-				if (displayGame.red.missiles[i].isActive)
+				if (games[displayGame].red.missiles[i].isActive)
 				{
-                    displayGame.red.missiles[i].missileOriented = displayGame.red.missiles[i].findOrientedImage(displayGame.red.missiles[i].scaleMissile(), displayGame.red.missiles[i].missileOrientation);
-                    graphics.DrawImage(displayGame.red.missiles[i].missileOriented, new Point(displayGame.red.missiles[i].position.x * Missile.xScale, displayGame.red.missiles[i].position.y * Missile.yScale));
+                    games[displayGame].red.missiles[i].missileOriented = games[displayGame].red.missiles[i].findOrientedImage(games[displayGame].red.missiles[i].scaleMissile(), games[displayGame].red.missiles[i].missileOrientation);
+                    graphics.DrawImage(games[displayGame].red.missiles[i].missileOriented, new Point(games[displayGame].red.missiles[i].position.x * Missile.xScale, games[displayGame].red.missiles[i].position.y * Missile.yScale));
 				}
-				else if (displayGame.red.missiles[i].isContact)
+				else if (games[displayGame].red.missiles[i].isContact)
 				{
-					graphics.DrawImage(displayGame.red.missiles[i].scaleExplosion(), new Point(displayGame.red.missiles[i].position.x * Missile.xScale, displayGame.red.missiles[i].position.y * Missile.yScale));
+					graphics.DrawImage(games[displayGame].red.missiles[i].scaleExplosion(), new Point(games[displayGame].red.missiles[i].position.x * Missile.xScale, games[displayGame].red.missiles[i].position.y * Missile.yScale));
 				}
 			}
-			for (int i = 0; i < displayGame.blue.missiles.Length; ++i)
+			for (int i = 0; i < games[displayGame].blue.missiles.Length; ++i)
 			{
-				if (displayGame.blue.missiles[i].isActive)
+				if (games[displayGame].blue.missiles[i].isActive)
 				{
-                    displayGame.blue.missiles[i].missileOriented = displayGame.blue.missiles[i].findOrientedImage(displayGame.blue.missiles[i].scaleMissile(), displayGame.blue.missiles[i].missileOrientation);
-                    graphics.DrawImage(displayGame.blue.missiles[i].missileOriented, new Point(displayGame.blue.missiles[i].position.x * Missile.xScale, displayGame.blue.missiles[i].position.y * Missile.yScale));
+                    games[displayGame].blue.missiles[i].missileOriented = games[displayGame].blue.missiles[i].findOrientedImage(games[displayGame].blue.missiles[i].scaleMissile(), games[displayGame].blue.missiles[i].missileOrientation);
+                    graphics.DrawImage(games[displayGame].blue.missiles[i].missileOriented, new Point(games[displayGame].blue.missiles[i].position.x * Missile.xScale, games[displayGame].blue.missiles[i].position.y * Missile.yScale));
 				}
-				else if (displayGame.blue.missiles[i].isContact)
+				else if (games[displayGame].blue.missiles[i].isContact)
 				{
-					graphics.DrawImage(displayGame.blue.missiles[i].scaleExplosion(), new Point(displayGame.blue.missiles[i].position.x * Missile.xScale, displayGame.blue.missiles[i].position.y * Missile.yScale));
+					graphics.DrawImage(games[displayGame].blue.missiles[i].scaleExplosion(), new Point(games[displayGame].blue.missiles[i].position.x * Missile.xScale, games[displayGame].blue.missiles[i].position.y * Missile.yScale));
 				}
 			}
 		}
@@ -436,7 +449,7 @@ namespace TankGame
 		/// </summary>
 		public void Render()
 		{
-			Player.renderPlayer(displayGame.mapBlocks, splitContainer1.Panel2.Width, splitContainer1.Panel2.Height);
+			Player.renderPlayer(games[displayGame].mapBlocks, splitContainer1.Panel2.Width, splitContainer1.Panel2.Height);
 
 			Bitmap bmp = new Bitmap(splitContainer1.Panel2.Width, splitContainer1.Panel2.Height);
 			using (Graphics graphics = Graphics.FromImage(bmp))
@@ -455,23 +468,36 @@ namespace TankGame
 
 		private void updateInformationDisplay()
 		{
-			elapsedTimeDisplay.Text = displayGame.elapsed.ToString();
-			currentPotDisplay.Text = displayGame.currentWinBonus.ToString();
-			redCurrentFitnessDisplay.Text = displayGame.red.organism.fitness.ToString();
-			redNumberOfMovesDisplay.Text = displayGame.red.numOfMoves.ToString();
-			redMissilesFiredDisplay.Text = displayGame.red.numOfMissilesFired.ToString();
-			blueCurrentFitnessDisplay.Text = displayGame.blue.organism.fitness.ToString();
-			blueNumberOfMovesDisplay.Text = displayGame.blue.numOfMoves.ToString();
-			blueMissilesFiredDisplay.Text = displayGame.blue.numOfMissilesFired.ToString();
-			generationCountDisplay.Text = displayGame.generationCount.ToString();
-			redNumberOfWinsDisplay.Text = displayGame.numRedWins.ToString();
-			blueNumberOfWinsDisplay.Text = displayGame.numBlueWins.ToString();
-			redNumberOfNodesDisplay.Text = displayGame.red.organism.botBrain.nextID.ToString();
-			blueNumberOfNodesDisplay.Text = displayGame.blue.organism.botBrain.nextID.ToString();
-			redNumberOfEdgesDisplay.Text = displayGame.red.organism.botBrain.edges.Count.ToString();
-			blueNumberOfEdgesDisplay.Text = displayGame.blue.organism.botBrain.edges.Count.ToString();
-			redPeakFitnessDisplay.Text = displayGame.peakRed.ToString();
-			bluePeakFitnessDisplay.Text = displayGame.peakBlue.ToString();
+			handleInvoke(elapsedTimeDisplay, games[displayGame].elapsed.ToString());
+			handleInvoke(currentPotDisplay, games[displayGame].currentWinBonus.ToString());
+			handleInvoke(redCurrentFitnessDisplay, games[displayGame].red.organism.fitness.ToString());
+			handleInvoke(redNumberOfMovesDisplay, games[displayGame].red.numOfMoves.ToString());
+			handleInvoke(redMissilesFiredDisplay, games[displayGame].red.numOfMissilesFired.ToString());
+			handleInvoke(blueCurrentFitnessDisplay, games[displayGame].blue.organism.fitness.ToString());
+			handleInvoke(blueNumberOfMovesDisplay, games[displayGame].blue.numOfMoves.ToString());
+			handleInvoke(blueMissilesFiredDisplay, games[displayGame].blue.numOfMissilesFired.ToString());
+			handleInvoke(generationCountDisplay, games[displayGame].generationCount.ToString());
+			handleInvoke(redNumberOfWinsDisplay, games[displayGame].numRedWins.ToString());
+			handleInvoke(blueNumberOfWinsDisplay, games[displayGame].numBlueWins.ToString());
+			handleInvoke(redNumberOfNodesDisplay, games[displayGame].red.organism.botBrain.nextID.ToString());
+			handleInvoke(blueNumberOfNodesDisplay, games[displayGame].blue.organism.botBrain.nextID.ToString());
+			handleInvoke(redNumberOfEdgesDisplay, games[displayGame].red.organism.botBrain.edges.Count.ToString());
+			handleInvoke(blueNumberOfEdgesDisplay, games[displayGame].blue.organism.botBrain.edges.Count.ToString());
+			handleInvoke(redPeakFitnessDisplay, games[displayGame].peakRed.ToString());
+			handleInvoke(bluePeakFitnessDisplay, games[displayGame].peakBlue.ToString());
+		}
+
+		private void handleInvoke(Control control, string text)
+		{
+			if (control.InvokeRequired)
+			{
+				var d = new SafeCallDelegate(handleInvoke);
+				control.Invoke(d, new object[] { control, text });
+			}
+			else
+			{
+				control.Text = text;
+			}
 		}
 	}
 }

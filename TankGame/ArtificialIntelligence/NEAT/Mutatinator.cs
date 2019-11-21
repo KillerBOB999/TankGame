@@ -13,7 +13,7 @@ namespace TankGame
             FIRST_UNUSED, AddNewNode, AddNewEdge, RemoveExistingEdge, ChangeExistingWeight, ChangeExistingBias, LAST_UNUSED
         };
         static Random rng = new Random();
-        public static void mutate(NeuralNetwork neuralNetwork)
+        public static NeuralNetwork mutate(NeuralNetwork neuralNetwork)
         {
             TypesOfMutation mutationChoice = (TypesOfMutation)rng.Next((int)TypesOfMutation.FIRST_UNUSED, (int)TypesOfMutation.LAST_UNUSED);
             switch (mutationChoice)
@@ -41,6 +41,7 @@ namespace TankGame
                     changeBias(neuralNetwork);
                     break;
             }
+			return neuralNetwork;
         }
 
         private static bool canAddEdge(NeuralNetwork neuralNetwork, int attemptedInputNode, int attemptedOutputNode)

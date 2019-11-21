@@ -143,7 +143,7 @@
 			this.groupBox2.Controls.Add(this.blueCurrentFitnessLabel);
 			this.groupBox2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
 			this.groupBox2.ForeColor = System.Drawing.Color.Blue;
-			this.groupBox2.Location = new System.Drawing.Point(12, 262);
+			this.groupBox2.Location = new System.Drawing.Point(12, 255);
 			this.groupBox2.Name = "groupBox2";
 			this.groupBox2.Size = new System.Drawing.Size(242, 141);
 			this.groupBox2.TabIndex = 8;

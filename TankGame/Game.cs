@@ -16,6 +16,7 @@ namespace TankGame
 		{
 			red = Red;
 			blue = Blue;
+			displayGame = display;
 			InitializeData();
 			//Timer timer = new Timer();
 			//timer.Interval = 5;        //# of milliseconds
@@ -28,7 +29,8 @@ namespace TankGame
 			GameLoop();
 		}
 
-        //START GLOBALS----------------------------------------------------------------------------------
+		//START GLOBALS----------------------------------------------------------------------------------
+		public bool displayGame;
 
         public int numberOfIterations = 0;
         public int maxIterations = 5000;
