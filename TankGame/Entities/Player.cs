@@ -403,13 +403,14 @@ namespace TankGame
 
         public void calcFitness(Player target, int numIterations)
         {
+			int fireScale = 3;
             if (target.distanceToNearestMissile != 0)
             {
-                organism.fitness = winBonus + (300 / target.distanceToNearestMissile) + (baseFitness / (numOfMoves + numOfMissilesFired + numIterations));
+                organism.fitness = winBonus + ((100 * fireScale) / target.distanceToNearestMissile) + (baseFitness / (numOfMissilesFired + numIterations)) - target.organism.fitness / 2;
             }
             else
             {
-                organism.fitness = winBonus + (baseFitness / (numOfMoves + numOfMissilesFired + numIterations));
+                organism.fitness = winBonus + (baseFitness / (numOfMoves + numOfMissilesFired + numIterations)) - target.organism.fitness / 2;
             }
         }
 

@@ -29,6 +29,10 @@
 		private void InitializeComponent()
 		{
 			this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+			this.maxFitDisplay = new System.Windows.Forms.Label();
+			this.maxFitLabel = new System.Windows.Forms.Label();
+			this.maxFitIdDisplay = new System.Windows.Forms.Label();
+			this.maxFitIdLabel = new System.Windows.Forms.Label();
 			this.blueIdDisplay = new System.Windows.Forms.Label();
 			this.redIdDisplay = new System.Windows.Forms.Label();
 			this.gameIdDisplay = new System.Windows.Forms.Label();
@@ -74,8 +78,6 @@
 			this.label3 = new System.Windows.Forms.Label();
 			this.label2 = new System.Windows.Forms.Label();
 			this.label1 = new System.Windows.Forms.Label();
-			this.maxFitIdLabel = new System.Windows.Forms.Label();
-			this.maxFitIdDisplay = new System.Windows.Forms.Label();
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
 			this.splitContainer1.Panel1.SuspendLayout();
 			this.splitContainer1.SuspendLayout();
@@ -92,6 +94,8 @@
 			// splitContainer1.Panel1
 			// 
 			this.splitContainer1.Panel1.BackColor = System.Drawing.SystemColors.Info;
+			this.splitContainer1.Panel1.Controls.Add(this.maxFitDisplay);
+			this.splitContainer1.Panel1.Controls.Add(this.maxFitLabel);
 			this.splitContainer1.Panel1.Controls.Add(this.maxFitIdDisplay);
 			this.splitContainer1.Panel1.Controls.Add(this.maxFitIdLabel);
 			this.splitContainer1.Panel1.Controls.Add(this.blueIdDisplay);
@@ -119,6 +123,50 @@
 			this.splitContainer1.SplitterDistance = 267;
 			this.splitContainer1.TabIndex = 0;
 			this.splitContainer1.TabStop = false;
+			// 
+			// maxFitDisplay
+			// 
+			this.maxFitDisplay.AutoSize = true;
+			this.maxFitDisplay.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.maxFitDisplay.ForeColor = System.Drawing.Color.Black;
+			this.maxFitDisplay.Location = new System.Drawing.Point(190, 416);
+			this.maxFitDisplay.Name = "maxFitDisplay";
+			this.maxFitDisplay.Size = new System.Drawing.Size(15, 16);
+			this.maxFitDisplay.TabIndex = 25;
+			this.maxFitDisplay.Text = "0";
+			// 
+			// maxFitLabel
+			// 
+			this.maxFitLabel.AutoSize = true;
+			this.maxFitLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.maxFitLabel.ForeColor = System.Drawing.Color.Black;
+			this.maxFitLabel.Location = new System.Drawing.Point(143, 416);
+			this.maxFitLabel.Name = "maxFitLabel";
+			this.maxFitLabel.Size = new System.Drawing.Size(50, 16);
+			this.maxFitLabel.TabIndex = 24;
+			this.maxFitLabel.Text = "MaxFit:";
+			// 
+			// maxFitIdDisplay
+			// 
+			this.maxFitIdDisplay.AutoSize = true;
+			this.maxFitIdDisplay.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.maxFitIdDisplay.ForeColor = System.Drawing.Color.Black;
+			this.maxFitIdDisplay.Location = new System.Drawing.Point(239, 400);
+			this.maxFitIdDisplay.Name = "maxFitIdDisplay";
+			this.maxFitIdDisplay.Size = new System.Drawing.Size(15, 16);
+			this.maxFitIdDisplay.TabIndex = 20;
+			this.maxFitIdDisplay.Text = "0";
+			// 
+			// maxFitIdLabel
+			// 
+			this.maxFitIdLabel.AutoSize = true;
+			this.maxFitIdLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.maxFitIdLabel.ForeColor = System.Drawing.Color.Black;
+			this.maxFitIdLabel.Location = new System.Drawing.Point(142, 400);
+			this.maxFitIdLabel.Name = "maxFitIdLabel";
+			this.maxFitIdLabel.Size = new System.Drawing.Size(63, 16);
+			this.maxFitIdLabel.TabIndex = 23;
+			this.maxFitIdLabel.Text = "MaxFitID:";
 			// 
 			// blueIdDisplay
 			// 
@@ -645,28 +693,6 @@
 			this.label1.Text = "Red";
 			this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
 			// 
-			// maxFitIdLabel
-			// 
-			this.maxFitIdLabel.AutoSize = true;
-			this.maxFitIdLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.maxFitIdLabel.ForeColor = System.Drawing.Color.Black;
-			this.maxFitIdLabel.Location = new System.Drawing.Point(142, 400);
-			this.maxFitIdLabel.Name = "maxFitIdLabel";
-			this.maxFitIdLabel.Size = new System.Drawing.Size(63, 16);
-			this.maxFitIdLabel.TabIndex = 23;
-			this.maxFitIdLabel.Text = "MaxFitID:";
-			// 
-			// maxFitIdDisplay
-			// 
-			this.maxFitIdDisplay.AutoSize = true;
-			this.maxFitIdDisplay.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.maxFitIdDisplay.ForeColor = System.Drawing.Color.Black;
-			this.maxFitIdDisplay.Location = new System.Drawing.Point(239, 400);
-			this.maxFitIdDisplay.Name = "maxFitIdDisplay";
-			this.maxFitIdDisplay.Size = new System.Drawing.Size(15, 16);
-			this.maxFitIdDisplay.TabIndex = 20;
-			this.maxFitIdDisplay.Text = "0";
-			// 
 			// Form1
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -738,6 +764,8 @@
 		private System.Windows.Forms.Label gameIdLabel;
 		private System.Windows.Forms.Label maxFitIdDisplay;
 		private System.Windows.Forms.Label maxFitIdLabel;
+		private System.Windows.Forms.Label maxFitDisplay;
+		private System.Windows.Forms.Label maxFitLabel;
 	}
 }
 

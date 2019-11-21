@@ -78,6 +78,7 @@ namespace TankGame
 		Game[] games;
 		int displayGame;
 		int maxFitnessID = -1;
+		double globalMax = 0;
 
 		public void SetUp()
 		{
@@ -136,7 +137,7 @@ namespace TankGame
 						{
 							game.GameLoop();
 							//Need to solve multiple access issues for rendering
-							if (game == games[displayGame] && Game.generationCount % 100 == 0) Render();
+							if (game == games[displayGame] && Game.generationCount % 1 == 0) Render();
 						}
 					}));
 				}
@@ -173,8 +174,8 @@ namespace TankGame
 
         public void updateFitness()
         {
-            double maxFitnessValue = 0;
-            foreach (Game game in games)
+			double maxFitnessValue = 0;
+			foreach (Game game in games)
             {
                 if (game.red.organism.fitness > maxFitnessValue)
                 {
@@ -204,6 +205,7 @@ namespace TankGame
                 }
             }
             updateHallOfFame(maxFitnessID);
+			if (maxFitnessValue > globalMax) globalMax = maxFitnessValue;
         }
 
         public void updateHallOfFame(int maxFitnessID)
@@ -222,12 +224,11 @@ namespace TankGame
 		public void evolveBrains()
 		{
 			Random rng = new Random();
-			double totalFitness = 0;
 			List<Tuple<int, double>> rangeOfMating = new List<Tuple<int, double>>();
 			List<KeyValuePair<int, double>> sortedFitnesses = brainFitness.ToList();
 			sortedFitnesses.Sort((pair1, pair2) => pair1.Value.CompareTo(pair2.Value));
 			List<Organism> replacements = new List<Organism>();
-			//Dictionary<int, NeuralNetwork> replacements = new Dictionary<int, NeuralNetwork>();
+			double totalFitness = 0;
 
 			int[] parentIDs;
 
@@ -280,28 +281,21 @@ namespace TankGame
 					lessFitID = 1;
 				}
 				replacements.Add(new Organism(
-					Mutatinator.mutate(
 						Mutatinator.cross(
 							brains[parentIDs[lessFitID]].botBrain,
 									  brains[parentIDs[moreFitID]].botBrain
-									  )
-							), sortedFitnesses[replaceIndex].Key
-						)
-					);
-				//replacements.Add(sortedFitnesses[replaceIndex].Key, 
-				//	Mutatinator.mutate(
-				//		Mutatinator.cross(
-				//			brains[parentIDs[lessFitID]].botBrain, 
-				//					  brains[parentIDs[moreFitID]].botBrain
-				//					  )
-				//		)
-				//	);
+									  ), sortedFitnesses[replaceIndex].Key)
+						);
 			}
 
 			foreach (var replacement in replacements)
 			{
 				brains[replacement.botBrainID] = new Organism(replacement);
-				int fish = 1 + 1;
+			}
+
+			foreach (var brain in brains)
+			{
+				if (brain.Value.botBrainID != maxFitnessID) Mutatinator.mutate(brain.Value.botBrain);
 			}
 		}
 
@@ -503,6 +497,7 @@ namespace TankGame
 			handleInvoke(redIdDisplay, games[displayGame].red.organism.botBrainID.ToString());
 			handleInvoke(blueIdDisplay, games[displayGame].blue.organism.botBrainID.ToString());
 			handleInvoke(maxFitIdDisplay, maxFitnessID.ToString());
+			handleInvoke(maxFitDisplay, globalMax.ToString());
 		}
 
 		private void handleInvoke(Control control, string text)
