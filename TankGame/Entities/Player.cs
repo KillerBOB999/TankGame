@@ -405,7 +405,7 @@ namespace TankGame
         {
             if (target.distanceToNearestMissile != 0)
             {
-                organism.fitness = winBonus + (100 / target.distanceToNearestMissile) + (baseFitness / (numOfMoves + numOfMissilesFired + numIterations));
+                organism.fitness = winBonus + (300 / target.distanceToNearestMissile) + (baseFitness / (numOfMoves + numOfMissilesFired + numIterations));
             }
             else
             {

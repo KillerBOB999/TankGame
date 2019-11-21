@@ -29,5 +29,11 @@ namespace TankGame.Entities
             botBrainID = ID;
             fitness = fitnessScore;
         }
+
+		public Organism(Organism organism)
+		{
+			botBrain = organism.botBrain;
+			botBrainID = organism.botBrainID;
+		}
     }
 }

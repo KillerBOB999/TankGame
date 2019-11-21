@@ -33,10 +33,10 @@ namespace TankGame
 		public bool displayGame;
 
         public int numberOfIterations = 0;
-        public int maxIterations = 5000;
+        public int maxIterations = 100;
 
 		public WorldState worldState;
-		public int generationCount = 0;
+		public static int generationCount = 0;
 		public double baseTimeLimitInSeconds = 1;
 		public double timeLimitInSeconds = 1;
 		public int numRedWins = 0;
@@ -85,7 +85,6 @@ namespace TankGame
 		/// </summary>
 		private void InitializeData()
 		{
-            ++generationCount;
             worldState = WorldState.GameInProgress;
 
 			startTime = DateTime.Now;

@@ -29,6 +29,12 @@
 		private void InitializeComponent()
 		{
 			this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+			this.blueIdDisplay = new System.Windows.Forms.Label();
+			this.redIdDisplay = new System.Windows.Forms.Label();
+			this.gameIdDisplay = new System.Windows.Forms.Label();
+			this.blueIdLabel = new System.Windows.Forms.Label();
+			this.redIdLabel = new System.Windows.Forms.Label();
+			this.gameIdLabel = new System.Windows.Forms.Label();
 			this.generationCountDisplay = new System.Windows.Forms.Label();
 			this.generationCountLabel = new System.Windows.Forms.Label();
 			this.groupBox2 = new System.Windows.Forms.GroupBox();
@@ -68,6 +74,8 @@
 			this.label3 = new System.Windows.Forms.Label();
 			this.label2 = new System.Windows.Forms.Label();
 			this.label1 = new System.Windows.Forms.Label();
+			this.maxFitIdLabel = new System.Windows.Forms.Label();
+			this.maxFitIdDisplay = new System.Windows.Forms.Label();
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
 			this.splitContainer1.Panel1.SuspendLayout();
 			this.splitContainer1.SuspendLayout();
@@ -84,6 +92,14 @@
 			// splitContainer1.Panel1
 			// 
 			this.splitContainer1.Panel1.BackColor = System.Drawing.SystemColors.Info;
+			this.splitContainer1.Panel1.Controls.Add(this.maxFitIdDisplay);
+			this.splitContainer1.Panel1.Controls.Add(this.maxFitIdLabel);
+			this.splitContainer1.Panel1.Controls.Add(this.blueIdDisplay);
+			this.splitContainer1.Panel1.Controls.Add(this.redIdDisplay);
+			this.splitContainer1.Panel1.Controls.Add(this.gameIdDisplay);
+			this.splitContainer1.Panel1.Controls.Add(this.blueIdLabel);
+			this.splitContainer1.Panel1.Controls.Add(this.redIdLabel);
+			this.splitContainer1.Panel1.Controls.Add(this.gameIdLabel);
 			this.splitContainer1.Panel1.Controls.Add(this.generationCountDisplay);
 			this.splitContainer1.Panel1.Controls.Add(this.generationCountLabel);
 			this.splitContainer1.Panel1.Controls.Add(this.groupBox2);
@@ -103,6 +119,72 @@
 			this.splitContainer1.SplitterDistance = 267;
 			this.splitContainer1.TabIndex = 0;
 			this.splitContainer1.TabStop = false;
+			// 
+			// blueIdDisplay
+			// 
+			this.blueIdDisplay.AutoSize = true;
+			this.blueIdDisplay.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.blueIdDisplay.ForeColor = System.Drawing.Color.Black;
+			this.blueIdDisplay.Location = new System.Drawing.Point(98, 433);
+			this.blueIdDisplay.Name = "blueIdDisplay";
+			this.blueIdDisplay.Size = new System.Drawing.Size(15, 16);
+			this.blueIdDisplay.TabIndex = 22;
+			this.blueIdDisplay.Text = "0";
+			// 
+			// redIdDisplay
+			// 
+			this.redIdDisplay.AutoSize = true;
+			this.redIdDisplay.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.redIdDisplay.ForeColor = System.Drawing.Color.Black;
+			this.redIdDisplay.Location = new System.Drawing.Point(98, 417);
+			this.redIdDisplay.Name = "redIdDisplay";
+			this.redIdDisplay.Size = new System.Drawing.Size(15, 16);
+			this.redIdDisplay.TabIndex = 21;
+			this.redIdDisplay.Text = "0";
+			// 
+			// gameIdDisplay
+			// 
+			this.gameIdDisplay.AutoSize = true;
+			this.gameIdDisplay.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.gameIdDisplay.ForeColor = System.Drawing.Color.Black;
+			this.gameIdDisplay.Location = new System.Drawing.Point(98, 401);
+			this.gameIdDisplay.Name = "gameIdDisplay";
+			this.gameIdDisplay.Size = new System.Drawing.Size(15, 16);
+			this.gameIdDisplay.TabIndex = 20;
+			this.gameIdDisplay.Text = "0";
+			// 
+			// blueIdLabel
+			// 
+			this.blueIdLabel.AutoSize = true;
+			this.blueIdLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.blueIdLabel.ForeColor = System.Drawing.Color.Black;
+			this.blueIdLabel.Location = new System.Drawing.Point(16, 433);
+			this.blueIdLabel.Name = "blueIdLabel";
+			this.blueIdLabel.Size = new System.Drawing.Size(51, 16);
+			this.blueIdLabel.TabIndex = 20;
+			this.blueIdLabel.Text = "BlueID:";
+			// 
+			// redIdLabel
+			// 
+			this.redIdLabel.AutoSize = true;
+			this.redIdLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.redIdLabel.ForeColor = System.Drawing.Color.Black;
+			this.redIdLabel.Location = new System.Drawing.Point(16, 417);
+			this.redIdLabel.Name = "redIdLabel";
+			this.redIdLabel.Size = new System.Drawing.Size(50, 16);
+			this.redIdLabel.TabIndex = 19;
+			this.redIdLabel.Text = "RedID:";
+			// 
+			// gameIdLabel
+			// 
+			this.gameIdLabel.AutoSize = true;
+			this.gameIdLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.gameIdLabel.ForeColor = System.Drawing.Color.Black;
+			this.gameIdLabel.Location = new System.Drawing.Point(16, 401);
+			this.gameIdLabel.Name = "gameIdLabel";
+			this.gameIdLabel.Size = new System.Drawing.Size(64, 16);
+			this.gameIdLabel.TabIndex = 18;
+			this.gameIdLabel.Text = "Game ID:";
 			// 
 			// generationCountDisplay
 			// 
@@ -143,7 +225,7 @@
 			this.groupBox2.Controls.Add(this.blueCurrentFitnessLabel);
 			this.groupBox2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
 			this.groupBox2.ForeColor = System.Drawing.Color.Blue;
-			this.groupBox2.Location = new System.Drawing.Point(12, 255);
+			this.groupBox2.Location = new System.Drawing.Point(12, 257);
 			this.groupBox2.Name = "groupBox2";
 			this.groupBox2.Size = new System.Drawing.Size(242, 141);
 			this.groupBox2.TabIndex = 8;
@@ -563,6 +645,28 @@
 			this.label1.Text = "Red";
 			this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
 			// 
+			// maxFitIdLabel
+			// 
+			this.maxFitIdLabel.AutoSize = true;
+			this.maxFitIdLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.maxFitIdLabel.ForeColor = System.Drawing.Color.Black;
+			this.maxFitIdLabel.Location = new System.Drawing.Point(142, 400);
+			this.maxFitIdLabel.Name = "maxFitIdLabel";
+			this.maxFitIdLabel.Size = new System.Drawing.Size(63, 16);
+			this.maxFitIdLabel.TabIndex = 23;
+			this.maxFitIdLabel.Text = "MaxFitID:";
+			// 
+			// maxFitIdDisplay
+			// 
+			this.maxFitIdDisplay.AutoSize = true;
+			this.maxFitIdDisplay.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.maxFitIdDisplay.ForeColor = System.Drawing.Color.Black;
+			this.maxFitIdDisplay.Location = new System.Drawing.Point(239, 400);
+			this.maxFitIdDisplay.Name = "maxFitIdDisplay";
+			this.maxFitIdDisplay.Size = new System.Drawing.Size(15, 16);
+			this.maxFitIdDisplay.TabIndex = 20;
+			this.maxFitIdDisplay.Text = "0";
+			// 
 			// Form1
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -626,6 +730,14 @@
         private System.Windows.Forms.Label redNumberOfEdgesLabel;
         private System.Windows.Forms.Label redNumberOfNodesDisplay;
         private System.Windows.Forms.Label redNumberOfNodesLabel;
+		private System.Windows.Forms.Label blueIdDisplay;
+		private System.Windows.Forms.Label redIdDisplay;
+		private System.Windows.Forms.Label gameIdDisplay;
+		private System.Windows.Forms.Label blueIdLabel;
+		private System.Windows.Forms.Label redIdLabel;
+		private System.Windows.Forms.Label gameIdLabel;
+		private System.Windows.Forms.Label maxFitIdDisplay;
+		private System.Windows.Forms.Label maxFitIdLabel;
 	}
 }
 

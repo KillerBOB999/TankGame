@@ -77,6 +77,7 @@ namespace TankGame
 		static Dictionary<int, double> brainFitness = new Dictionary<int, double>();
 		Game[] games;
 		int displayGame;
+		int maxFitnessID = -1;
 
 		public void SetUp()
 		{
@@ -102,10 +103,10 @@ namespace TankGame
 		{
 			while (true)
 			{
+				Random rng = new Random();
 				List<int> activeBrains = new List<int>();
 				for (int i = 0; i < games.Length; ++i)
 				{
-					Random rng = new Random();
 					int rand1 = rng.Next(0, nextBrainID);
 					int rand2 = rng.Next(0, nextBrainID);
 					while (activeBrains.Contains(rand1))
@@ -120,10 +121,12 @@ namespace TankGame
 					activeBrains.Add(rand2);
 					games[i] = new Game(new Player(red), new Player(blue), false);
 					games[i].red.organism.botBrainID = rand1;
-					red.organism.botBrain = brains[rand1].botBrain;
+					games[i].red.organism.botBrain = brains[rand1].botBrain;
 					games[i].blue.organism.botBrainID = rand2;
-					blue.organism.botBrain = brains[rand2].botBrain;
+					games[i].blue.organism.botBrain = brains[rand2].botBrain;
+					if (maxFitnessID == rand1 || maxFitnessID == rand2) displayGame = i;
 				}
+				Game.generationCount++;
 				List<Task> toDo = new List<Task>();
 				foreach (Game game in games)
 				{
@@ -133,13 +136,14 @@ namespace TankGame
 						{
 							game.GameLoop();
 							//Need to solve multiple access issues for rendering
-							if (game == games[displayGame]) Render();
+							if (game == games[displayGame] && Game.generationCount % 100 == 0) Render();
 						}
 					}));
 				}
 				Task.WaitAll(toDo.ToArray());
 				updateBrains();
                 updateFitness();
+				displayGame = rng.Next(0, games.Length);
 			}
 		}
 
@@ -169,7 +173,6 @@ namespace TankGame
 
         public void updateFitness()
         {
-            int maxFitnessID = -1;
             double maxFitnessValue = 0;
             foreach (Game game in games)
             {
@@ -223,7 +226,8 @@ namespace TankGame
 			List<Tuple<int, double>> rangeOfMating = new List<Tuple<int, double>>();
 			List<KeyValuePair<int, double>> sortedFitnesses = brainFitness.ToList();
 			sortedFitnesses.Sort((pair1, pair2) => pair1.Value.CompareTo(pair2.Value));
-			Dictionary<int, NeuralNetwork> replacements = new Dictionary<int, NeuralNetwork>();
+			List<Organism> replacements = new List<Organism>();
+			//Dictionary<int, NeuralNetwork> replacements = new Dictionary<int, NeuralNetwork>();
 
 			int[] parentIDs;
 
@@ -244,7 +248,7 @@ namespace TankGame
 				}
 			}
 
-			for (int replaceIndex = 0; replaceIndex < sortedFitnesses.Count / 2; replaceIndex += 2)
+			for (int replaceIndex = 0; replaceIndex < sortedFitnesses.Count / 2; replaceIndex++)
 			{
 				parentIDs = new int[] { -1, -1 };
 				int parentIndex = 0;
@@ -275,20 +279,30 @@ namespace TankGame
 					moreFitID = 0;
 					lessFitID = 1;
 				}
-				replacements.Add(sortedFitnesses[replaceIndex].Key, 
+				replacements.Add(new Organism(
 					Mutatinator.mutate(
-						//Mutatinator.cross(
-							brains[parentIDs[lessFitID]].botBrain//, 
-									  //brains[parentIDs[moreFitID]].botBrain
+						Mutatinator.cross(
+							brains[parentIDs[lessFitID]].botBrain,
+									  brains[parentIDs[moreFitID]].botBrain
 									  )
-						//)
+							), sortedFitnesses[replaceIndex].Key
+						)
 					);
+				//replacements.Add(sortedFitnesses[replaceIndex].Key, 
+				//	Mutatinator.mutate(
+				//		Mutatinator.cross(
+				//			brains[parentIDs[lessFitID]].botBrain, 
+				//					  brains[parentIDs[moreFitID]].botBrain
+				//					  )
+				//		)
+				//	);
 			}
 
-			//foreach(KeyValuePair<int, NeuralNetwork> replacement in replacements)
-			//{
-			//	brains[replacement.Key] = replacements[replacement.Key];
-			//}
+			foreach (var replacement in replacements)
+			{
+				brains[replacement.botBrainID] = new Organism(replacement);
+				int fish = 1 + 1;
+			}
 		}
 
 		/// <summary>
@@ -476,7 +490,7 @@ namespace TankGame
 			handleInvoke(blueCurrentFitnessDisplay, games[displayGame].blue.organism.fitness.ToString());
 			handleInvoke(blueNumberOfMovesDisplay, games[displayGame].blue.numOfMoves.ToString());
 			handleInvoke(blueMissilesFiredDisplay, games[displayGame].blue.numOfMissilesFired.ToString());
-			handleInvoke(generationCountDisplay, games[displayGame].generationCount.ToString());
+			handleInvoke(generationCountDisplay, Game.generationCount.ToString());
 			handleInvoke(redNumberOfWinsDisplay, games[displayGame].numRedWins.ToString());
 			handleInvoke(blueNumberOfWinsDisplay, games[displayGame].numBlueWins.ToString());
 			handleInvoke(redNumberOfNodesDisplay, games[displayGame].red.organism.botBrain.nextID.ToString());
@@ -485,6 +499,10 @@ namespace TankGame
 			handleInvoke(blueNumberOfEdgesDisplay, games[displayGame].blue.organism.botBrain.edges.Count.ToString());
 			handleInvoke(redPeakFitnessDisplay, games[displayGame].peakRed.ToString());
 			handleInvoke(bluePeakFitnessDisplay, games[displayGame].peakBlue.ToString());
+			handleInvoke(gameIdDisplay, displayGame.ToString());
+			handleInvoke(redIdDisplay, games[displayGame].red.organism.botBrainID.ToString());
+			handleInvoke(blueIdDisplay, games[displayGame].blue.organism.botBrainID.ToString());
+			handleInvoke(maxFitIdDisplay, maxFitnessID.ToString());
 		}
 
 		private void handleInvoke(Control control, string text)
