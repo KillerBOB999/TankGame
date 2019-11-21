@@ -134,61 +134,72 @@ namespace TankGame
 				}
 				Task.WaitAll(toDo.ToArray());
 				updateBrains();
+                updateFitness();
 			}
 		}
 
-		public void updateBrains()
-		{
-			for (int i = 0; i < games.Length; ++i)
-			{
-				if (!brains.ContainsKey(games[i].red.organism.botBrainID))
-				{
-					brains.Add(games[i].red.organism.botBrainID, games[i].red.organism);
-				}
-				else
-				{
-					brains[games[i].red.organism.botBrainID] = games[i].red.organism;
-				}
-				if (!brains.ContainsKey(games[i].blue.organism.botBrainID))
-				{
-					brains.Add(games[i].blue.organism.botBrainID, games[i].blue.organism);
-				}
-				else
-				{
-					brains[games[i].blue.organism.botBrainID] = games[i].blue.organism;
-				}
-			}
-			int maxFitnessID = -1;
-			double maxFitnessValue = 0;
-			foreach (Game game in games)
-			{
-				if (game.red.organism.fitness > maxFitnessValue)
-				{
-					maxFitnessID = game.red.organism.botBrainID;
-					maxFitnessValue = game.red.organism.fitness;
-				}
-				else if (game.blue.organism.fitness > maxFitnessValue)
-				{
-					maxFitnessID = game.blue.organism.botBrainID;
-					maxFitnessValue = game.blue.organism.fitness;
-				}
-				if (!brainFitness.ContainsKey(game.red.organism.botBrainID))
-				{
-					brainFitness.Add(game.red.organism.botBrainID, game.red.organism.fitness);
-				}
-				else
-				{
-					brainFitness[game.red.organism.botBrainID] = game.red.organism.fitness;
-				}
-				if (!brainFitness.ContainsKey(game.blue.organism.botBrainID))
-				{
-					brainFitness.Add(game.blue.organism.botBrainID, game.blue.organism.fitness);
-				}
-				else
-				{
-					brainFitness[game.blue.organism.botBrainID] = game.blue.organism.fitness;
-				}
-			}
+        public void updateBrains()
+        {
+            // Update the brains dictionary
+            for (int i = 0; i < games.Length; ++i)
+            {
+                if (!brains.ContainsKey(games[i].red.organism.botBrainID))
+                {
+                    brains.Add(games[i].red.organism.botBrainID, games[i].red.organism);
+                }
+                else
+                {
+                    brains[games[i].red.organism.botBrainID] = games[i].red.organism;
+                }
+                if (!brains.ContainsKey(games[i].blue.organism.botBrainID))
+                {
+                    brains.Add(games[i].blue.organism.botBrainID, games[i].blue.organism);
+                }
+                else
+                {
+                    brains[games[i].blue.organism.botBrainID] = games[i].blue.organism;
+                }
+            }
+        }
+
+        public void updateFitness()
+        {
+            int maxFitnessID = -1;
+            double maxFitnessValue = 0;
+            foreach (Game game in games)
+            {
+                if (game.red.organism.fitness > maxFitnessValue)
+                {
+                    maxFitnessID = game.red.organism.botBrainID;
+                    maxFitnessValue = game.red.organism.fitness;
+                }
+                else if (game.blue.organism.fitness > maxFitnessValue)
+                {
+                    maxFitnessID = game.blue.organism.botBrainID;
+                    maxFitnessValue = game.blue.organism.fitness;
+                }
+                if (!brainFitness.ContainsKey(game.red.organism.botBrainID))
+                {
+                    brainFitness.Add(game.red.organism.botBrainID, game.red.organism.fitness);
+                }
+                else
+                {
+                    brainFitness[game.red.organism.botBrainID] = game.red.organism.fitness;
+                }
+                if (!brainFitness.ContainsKey(game.blue.organism.botBrainID))
+                {
+                    brainFitness.Add(game.blue.organism.botBrainID, game.blue.organism.fitness);
+                }
+                else
+                {
+                    brainFitness[game.blue.organism.botBrainID] = game.blue.organism.fitness;
+                }
+            }
+            updateHallOfFame(maxFitnessID);
+        }
+
+        public void updateHallOfFame(int maxFitnessID)
+        {
 			if (!hallOfFame.ContainsKey(maxFitnessID))
 			{
 				hallOfFame.Add(maxFitnessID, brains[maxFitnessID]);
