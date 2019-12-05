@@ -212,7 +212,11 @@ namespace TankGame
                             break;
                     }
                 }
-                return Math.Atan((double)deltaY / (double)deltaX);
+				if (deltaX == 0 && deltaY == 0)
+				{
+					return -2 * Math.PI;
+				}
+				return Math.Atan((double)deltaY / (double)deltaX);
             }
         }
       
@@ -404,13 +408,24 @@ namespace TankGame
         public void calcFitness(Player target, int numIterations)
         {
 			int fireScale = 3;
+			double localDegree;
+			if (degreeToTarget == 0)
+			{
+				localDegree = 0.01;
+			}
+			else localDegree = degreeToTarget;
             if (target.distanceToNearestMissile != 0)
             {
-                organism.fitness = winBonus + ((100 * fireScale) / target.distanceToNearestMissile) + (baseFitness / (numOfMissilesFired + numIterations)) - target.organism.fitness / 2;
+				organism.fitness =
+					winBonus +
+					(100 * fireScale) / target.distanceToNearestMissile +
+					1 / Math.Abs(localDegree) +
+					(baseFitness / numIterations) -
+					distanceToNearestMissile;
             }
             else
             {
-                organism.fitness = winBonus + (baseFitness / (numOfMoves + numOfMissilesFired + numIterations)) - target.organism.fitness / 2;
+				organism.fitness += winBonus;
             }
         }
 

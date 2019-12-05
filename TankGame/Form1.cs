@@ -70,7 +70,7 @@ namespace TankGame
 		static Player blue = new Player("Resources/images/Blue_TankBody.png", "Resources/images/Turret.png",
 								Orientation.North, Orientation.North, isBlueHumanPlaying, false);
 
-		const int populationSize = 50;
+		const int populationSize = 500;
         static int nextBrainID = 0;
 		static Dictionary<int, Organism> hallOfFame = new Dictionary<int, Organism>();
 		static Dictionary<int, Organism> brains = new Dictionary<int, Organism>();
@@ -102,6 +102,7 @@ namespace TankGame
 
 		public void runSimulation()
 		{
+			System.Threading.Thread.Sleep(100);
 			while (true)
 			{
 				Random rng = new Random();
@@ -249,7 +250,7 @@ namespace TankGame
 				}
 			}
 
-			for (int replaceIndex = 0; replaceIndex < sortedFitnesses.Count / 2; replaceIndex++)
+			for (int replaceIndex = 0; replaceIndex < sortedFitnesses.Count * 0.9; replaceIndex++)
 			{
 				parentIDs = new int[] { -1, -1 };
 				int parentIndex = 0;
